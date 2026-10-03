@@ -12,8 +12,8 @@ Aplicacion movil de apoyo didactico para Segundo Basico basada en las necesidade
 
 ## Integrantes
 
-- Integrante 1: Por definir
-- Integrante 2: Por definir
+- Gonzalo Yañez
+- Itsari Moreno
 
 ## Descripcion General
 
