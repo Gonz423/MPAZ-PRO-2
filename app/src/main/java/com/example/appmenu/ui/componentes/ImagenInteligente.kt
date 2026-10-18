@@ -1,5 +1,6 @@
 package com.example.appmenu.ui.componentes
 
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -17,13 +18,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import android.net.Uri
+
+// COMPONENTE MODULAR: VISOR DE FOTO DE CREDENCIAL/PERFIL
+
 
 @Composable
 fun ImagenInteligente(
     imagenUri: Uri?,
     modifier: Modifier = Modifier,
-    descripcion: String = "Imagen de perfil"
+    descripcion: String = "Fotografía de credencial escolar"
 ) {
     Box(
         modifier = modifier
@@ -37,26 +40,18 @@ fun ImagenInteligente(
             AsyncImage(
                 model = imagenUri,
                 contentDescription = descripcion,
-                modifier = Modifier.fillMaxSize().clip(CircleShape),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(CircleShape),
                 contentScale = ContentScale.Crop
             )
         } else {
             Icon(
                 imageVector = Icons.Filled.Person,
-                contentDescription = "Sin imagen de perfil",
+                contentDescription = "Sin imagen seleccionada",
                 modifier = Modifier.size(88.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
-}
-
-@Composable
-fun AsyncImage(
-    model: Uri,
-    contentDescription: String,
-    modifier: Modifier,
-    contentScale: ContentScale
-) {
-    TODO("Not yet implemented")
 }
