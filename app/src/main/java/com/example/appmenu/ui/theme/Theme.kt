@@ -29,7 +29,7 @@ private val LightColorScheme = lightColorScheme(
 @Composable
 fun AppMenuTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
+    // dynamic color is available on android 12+
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {

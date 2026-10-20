@@ -9,8 +9,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.example.appmenu.ui.theme.AzulBarraSuperior
 
-// Helper reutilizable para items de NavigationBar
-// Necesita RowScope porque NavigationBarItem es una extension function de RowScope
+// helper reutilizable para items de navigationbar
+// necesita rowscope porque navigationbaritem es una extension function de rowscope
 
 @Composable
 fun RowScope.TabNavItem(

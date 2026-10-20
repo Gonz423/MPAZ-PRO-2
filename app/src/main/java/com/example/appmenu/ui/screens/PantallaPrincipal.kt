@@ -33,7 +33,7 @@ import com.example.appmenu.ui.theme.*
 import com.example.appmenu.viewmodel.EstadoViewModel
 import kotlinx.coroutines.delay
 
-// PANTALLA PRINCIPAL: PERFIL ESTUDIANTE (ESTILO MOCKUP MPAZ PRO 2.º)
+// pantalla principal: perfil estudiante estilo mockup mpaz pro 2.º
 
 @Composable
 fun PantallaPrincipal(
@@ -42,7 +42,7 @@ fun PantallaPrincipal(
 ) {
     val context = LocalContext.current
 
-    // Estados del ViewModel
+    // estados del viewmodel
     val estadoGuardado by estadoViewModel.estadoActivado.collectAsState()
     val cargando by estadoViewModel.cargando.collectAsState()
     val guardadoCorrectamente by estadoViewModel.guardadoCorrectamente.collectAsState()
@@ -63,7 +63,7 @@ fun PantallaPrincipal(
         }
     }
 
-    // Color animado para el boton de modo guiado
+    // color animado para el boton de modo guiado
     val colorBotonModo by animateColorAsState(
         targetValue = if (estadoActivado) Color(0xFF2E7D32) else AzulBarraSuperior,
         label = "ColorBotonModo"
@@ -77,13 +77,13 @@ fun PantallaPrincipal(
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // BANNER DE SALUDO
+        // banner de saludo
         BannerSaludoEstudiante(
             nombre = "Martina",
             mensaje = "¿Qué aprenderemos hoy?"
         )
 
-        // TÍTULO DE ASIGNATURAS Y ESTADO
+        // titulo de asignaturas y estado
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -103,11 +103,11 @@ fun PantallaPrincipal(
             )
         }
 
-        // GRILLA MODULAR DE 4 ASIGNATURAS
-        // El orden y colores se cambian directamente en ModulosEducativos.kt
+        // grilla modular de 4 asignaturas
+        // el orden y colores se cambian directamente en moduloseducativos.kt
         val listaAsignaturas = ConfiguracionEducativa.asignaturas
 
-        // FILA 1
+        // fila 1
         if (listaAsignaturas.size >= 2) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -132,7 +132,7 @@ fun PantallaPrincipal(
             }
         }
 
-        // FILA 2
+        // fila 2
         if (listaAsignaturas.size >= 4) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -157,7 +157,7 @@ fun PantallaPrincipal(
             }
         }
 
-        // CONTROL APOYO DIDACTICO
+        // control apoyo didactico
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),

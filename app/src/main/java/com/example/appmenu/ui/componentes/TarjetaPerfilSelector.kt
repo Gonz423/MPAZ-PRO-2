@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.sp
 import com.example.appmenu.ui.theme.AzulBarraSuperior
 import com.example.appmenu.ui.theme.TextoOscuro
 
-// Componente reutilizable: tarjeta de seleccion de perfil
+// componente reutilizable: tarjeta de seleccion de perfil
 
 @Composable
 fun TarjetaPerfilSelector(
@@ -29,7 +29,7 @@ fun TarjetaPerfilSelector(
 ) {
     var presionado by remember { mutableStateOf(false) }
 
-    // Animacion de escala al presionar (efecto tactil)
+    // animacion de escala al presionar efecto tactil
     val escala by animateFloatAsState(
         targetValue = if (presionado) 0.97f else 1f,
         animationSpec = tween(100),
@@ -55,7 +55,7 @@ fun TarjetaPerfilSelector(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Icono con fondo redondeado
+            // icono con fondo redondeado
             Surface(
                 shape = RoundedCornerShape(14.dp),
                 color = AzulBarraSuperior.copy(alpha = 0.12f),
@@ -71,7 +71,7 @@ fun TarjetaPerfilSelector(
                 }
             }
 
-            // Texto: titulo y descripcion del perfil
+            // texto: titulo y descripcion del perfil
             Column {
                 Text(
                     text = titulo,

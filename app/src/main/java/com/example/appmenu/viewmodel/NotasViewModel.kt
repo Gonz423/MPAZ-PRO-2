@@ -11,12 +11,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-// VIEWMODEL MODULAR PARA CUADERNO DE TAREAS Y OBSERVACIONES (ROOM)
+// viewmodel modular para cuaderno de tareas y observaciones room
 class NotasViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository: NoteRepository
 
-    // Flujo observable de notas desde Room
+    // flujo observable de notas desde room
     val notas: StateFlow<List<Note>>
 
     init {
@@ -29,7 +29,7 @@ class NotasViewModel(application: Application) : AndroidViewModel(application) {
         )
     }
 
-    //  Guarda una nueva nota/tarea en la base de datos Room
+    //  guarda una nueva nota/tarea en la base de datos room
     fun guardarNota(titulo: String, contenido: String, onResultado: (Boolean, String) -> Unit) {
         if (titulo.isBlank() || contenido.isBlank()) {
             onResultado(false, "Escribe el título y la observación.")
@@ -42,7 +42,7 @@ class NotasViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    //  Elimina una nota/tarea existente
+    //  elimina una nota/tarea existente
     fun eliminarNota(note: Note) {
         viewModelScope.launch {
             repository.delete(note)

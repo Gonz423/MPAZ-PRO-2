@@ -11,12 +11,19 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -26,42 +33,46 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.appmenu.data.CamaraUriFactory
 import com.example.appmenu.ui.componentes.ImagenInteligente
-import com.example.appmenu.ui.theme.AzulBarraSuperior
-import com.example.appmenu.ui.theme.BlancoTarjeta
-import com.example.appmenu.ui.theme.FondoApp
-import com.example.appmenu.ui.theme.GrisTexto
-import com.example.appmenu.ui.theme.TextoOscuro
+import com.example.appmenu.ui.theme.*
+import com.example.appmenu.viewmodel.EstadoViewModel
 import com.example.appmenu.viewmodel.PerfilViewModel
 
-// PANTALLA: PERFIL Y FOTO DE CREDENCIAL ESCOLAR (CAMARA/GALERIA)
+// pantalla: perfil del estudiante y configuracion mockup screen 11 mpaz pro 2.º
 
 @Composable
 fun PerfilScreen(
-    perfilViewModel: PerfilViewModel = viewModel()
+    perfilViewModel: PerfilViewModel = viewModel(),
+    estadoViewModel: EstadoViewModel = viewModel(),
+    onCerrarSesion: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val imagenUri by perfilViewModel.imagenUri.collectAsState()
 
-    // Launcher para seleccionar imagen existente desde la galeria
+    // configuracion desde datastore
+    val modoAudioActivo by estadoViewModel.estadoActivado.collectAsState()
+    var notificacionesActivas by remember { mutableStateOf(true) }
+    var modoOscuroActivo by remember { mutableStateOf(false) }
+
+    // launcher para galeria
     val galeriaLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uriSeleccionado ->
         perfilViewModel.actualizarImagenDesdeGaleria(uriSeleccionado)
     }
 
-    // Launcher para capturar foto con la aplicación de camara del dispositivo
+    // launcher para camara
     val camaraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { exito ->
         if (exito) {
             perfilViewModel.actualizarImagenDesdeCamara(true)
-            Toast.makeText(context, "¡Fotografía capturada y guardada!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "¡Fotografía de credencial guardada!", Toast.LENGTH_SHORT).show()
         } else {
-            Toast.makeText(context, "Captura de fotografía cancelada.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Captura cancelada.", Toast.LENGTH_SHORT).show()
         }
     }
 
-    // Launcher para solicitar permiso camara si el usuario no lo ha otorgado
+    // launcher para permiso de camara
     val permisoCamaraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { concedido ->
@@ -74,11 +85,10 @@ fun PerfilScreen(
                 Toast.makeText(context, "Error al preparar la cámara: ${e.message}", Toast.LENGTH_LONG).show()
             }
         } else {
-            Toast.makeText(context, "Debes permitir el acceso a la cámara para tomar la fotografía.", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, "Permiso de cámara denegado.", Toast.LENGTH_LONG).show()
         }
     }
 
-    // Funcion de activacion de la camara
     fun abrirCamara() {
         val permisoConcedido = ContextCompat.checkSelfPermission(
             context,
@@ -91,39 +101,23 @@ fun PerfilScreen(
                 perfilViewModel.uriPendienteCamara = uri
                 camaraLauncher.launch(uri)
             } catch (e: Exception) {
-                Toast.makeText(context, "Error al preparar la cámara: ${e.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG).show()
             }
         } else {
             permisoCamaraLauncher.launch(Manifest.permission.CAMERA)
         }
     }
 
-    // Interfaz Visual
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(FondoApp)
-            .padding(20.dp)
+            .padding(16.dp)
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Cabecera
-        Text(
-            text = "Perfil del Estudiante",
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold,
-            color = TextoOscuro
-        )
-
-        Text(
-            text = "Fotografía para credencial escolar · Escuela Marcela Paz (2.° Básico)",
-            fontSize = 13.sp,
-            textAlign = TextAlign.Center,
-            color = GrisTexto
-        )
-
-        // Tarjeta con visor e interactores
+        // tarjeta de cabecera y foto mockup screen 11
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
@@ -135,55 +129,182 @@ fun PerfilScreen(
                     .fillMaxWidth()
                     .padding(20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Componente modular de visualizacion de foto
+                // foto con bordes redondeados y soporte de camara nativa
                 ImagenInteligente(imagenUri = imagenUri)
 
                 Text(
-                    text = if (imagenUri == null) {
-                        "Sin fotografía asignada"
-                    } else {
-                        "Fotografía de credencial guardada"
-                    },
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
+                    text = "Martina González",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
                     color = TextoOscuro
                 )
 
-                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Editar fotografía de credencial",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = AzulBarraSuperior
+                )
 
-                // Boton de la camara
-                Button(
-                    onClick = { abrirCamara() },
-                    modifier = Modifier.fillMaxWidth().height(48.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = AzulBarraSuperior)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.PhotoCamera,
-                        contentDescription = "Cámara",
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Tomar fotografía con cámara")
-                }
+                    Button(
+                        onClick = { abrirCamara() },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = AzulBarraSuperior)
+                    ) {
+                        Icon(Icons.Default.PhotoCamera, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Cámara", fontSize = 12.sp)
+                    }
 
-                // Boton Galeria
-                OutlinedButton(
-                    onClick = { galeriaLauncher.launch("image/*") },
-                    modifier = Modifier.fillMaxWidth().height(48.dp),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.PhotoLibrary,
-                        contentDescription = "Galería",
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Elegir desde galería")
+                    OutlinedButton(
+                        onClick = { galeriaLauncher.launch("image/*") },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Icon(Icons.Default.PhotoLibrary, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Galería", fontSize = 12.sp)
+                    }
                 }
             }
         }
+
+        // seccion: informacion del estudiante mockup screen 11
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(18.dp),
+            colors = CardDefaults.cardColors(containerColor = BlancoTarjeta),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(18.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "Información",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextoOscuro
+                )
+
+                FilaDatoPerfil("Curso", "2.° Básico", Icons.Default.School)
+                FilaDatoPerfil("Usuario", "martina", Icons.Default.Person)
+                FilaDatoPerfil("Contraseña", "••••••••", Icons.Default.Lock)
+            }
+        }
+
+        // seccion: configuracion mockup screen 11
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(18.dp),
+            colors = CardDefaults.cardColors(containerColor = BlancoTarjeta),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(18.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                Text(
+                    text = "Configuración",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextoOscuro
+                )
+
+                // 1. audio de instrucciones datastore preferences
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.VolumeUp, contentDescription = null, tint = AzulBarraSuperior, modifier = Modifier.size(20.dp))
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text("Audio de instrucciones", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = TextoOscuro)
+                            Text("Soporte sonoro (DataStore)", fontSize = 11.sp, color = GrisTexto)
+                        }
+                    }
+                    Switch(
+                        checked = modoAudioActivo,
+                        onCheckedChange = { estadoViewModel.guardarEstado(it) }
+                    )
+                }
+
+                HorizontalDivider(color = Color(0xFFF1F5F9))
+
+                // 2. notificaciones
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Notifications, contentDescription = null, tint = AzulBarraSuperior, modifier = Modifier.size(20.dp))
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text("Notificaciones de tareas", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = TextoOscuro)
+                    }
+                    Switch(
+                        checked = notificacionesActivas,
+                        onCheckedChange = { notificacionesActivas = it }
+                    )
+                }
+
+                HorizontalDivider(color = Color(0xFFF1F5F9))
+
+                // 3. modo oscuro
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Modo oscuro", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = TextoOscuro)
+                    Switch(
+                        checked = modoOscuroActivo,
+                        onCheckedChange = { modoOscuroActivo = it }
+                    )
+                }
+            }
+        }
+
+        // boton cerrar sesion / cambiar de perfil
+        OutlinedButton(
+            onClick = onCerrarSesion,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Icon(Icons.Default.ExitToApp, contentDescription = null, modifier = Modifier.size(18.dp))
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Cerrar sesión / Cambiar de perfil")
+        }
+    }
+}
+
+@Composable
+fun FilaDatoPerfil(
+    etiqueta: String,
+    valor: String,
+    icono: androidx.compose.ui.graphics.vector.ImageVector
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(icono, contentDescription = null, tint = GrisTexto, modifier = Modifier.size(18.dp))
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(etiqueta, fontSize = 13.sp, color = GrisTexto)
+        }
+        Text(valor, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = TextoOscuro)
     }
 }

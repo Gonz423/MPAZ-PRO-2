@@ -24,9 +24,9 @@ import com.example.appmenu.model.TarjetaAsignatura
 import com.example.appmenu.ui.theme.GrisTexto
 import com.example.appmenu.ui.theme.TextoOscuro
 
-// COMPONENTES MODULARES Y REUTILIZABLES - ESTILO MPAZ PRO 2.º
+// componentes modulares y reutilizables - estilo mpaz pro 2.º
 
-// Banner de Saludo para el Estudiante (avatar + mensaje motivacional)
+// banner de saludo para el estudiante avatar + mensaje motivacional
 
 @Composable
 fun BannerSaludoEstudiante(
@@ -46,7 +46,7 @@ fun BannerSaludoEstudiante(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Avatar infantil
+            // avatar infantil
             Box(
                 modifier = Modifier
                     .size(54.dp)
@@ -81,8 +81,8 @@ fun BannerSaludoEstudiante(
     }
 }
 
-// Tarjeta Modular de Asignatura (Lenguaje, Matematica, Ciencias, Historia)
-// Su color, icono y texto vienen de ModeloAsignatura
+// tarjeta modular de asignatura lenguaje, matematica, ciencias, historia
+// su color, icono y texto vienen de modeloasignatura
 
 @Composable
 fun TarjetaAsignaturaItem(
@@ -106,7 +106,7 @@ fun TarjetaAsignaturaItem(
             verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Contenedor semitransparente para el ícono
+            // contenedor semitransparente para el icono
             Box(
                 modifier = Modifier
                     .size(46.dp)
@@ -139,7 +139,7 @@ fun TarjetaAsignaturaItem(
     }
 }
 
-// Tarjeta de metrica para panel de docentes
+// tarjeta de metrica para panel de docentes
 
 @Composable
 fun TarjetaMetricaItem(
@@ -174,7 +174,7 @@ fun TarjetaMetricaItem(
     }
 }
 
-// Fila con barra de progreso animada por asignatura
+// fila con barra de progreso animada por asignatura
 
 @Composable
 fun FilaProgresoAsignatura(

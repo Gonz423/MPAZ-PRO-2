@@ -19,7 +19,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 
-// COMPONENTE MODULAR: VISOR DE FOTO DE CREDENCIAL/PERFIL
+// componente modular: visor de foto de credencial/perfil
 
 
 @Composable

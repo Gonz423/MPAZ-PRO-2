@@ -1,18 +1,28 @@
 package com.example.appmenu.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.NoteAdd
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -20,8 +30,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.appmenu.room.Note
 import com.example.appmenu.ui.theme.*
 import com.example.appmenu.viewmodel.NotasViewModel
+import kotlinx.coroutines.delay
 
-// PANTALLA: CUADERNO DE TAREAS Y OBSERVACIONES
+// pantalla: cuaderno de tareas y observaciones room + validaciones + filtro dinamico
 
 @Composable
 fun NotasScreen(
@@ -31,8 +42,38 @@ fun NotasScreen(
     var content by remember { mutableStateOf("") }
     var message by remember { mutableStateOf("") }
 
-    // Flujo reactivo observable desde Room
+    // estados de validacion visual del formulario 2
+    var errorTitulo by remember { mutableStateOf<String?>(null) }
+    var errorContenido by remember { mutableStateOf<String?>(null) }
+
+    // estado del filtro dinamico bonus track d
+    var filtroBusqueda by remember { mutableStateOf("") }
+
+    // feedback haptico nativo
+    val haptic = LocalHapticFeedback.current
+
+    // flujo reactivo observable desde room
     val notes by viewModel.notas.collectAsState()
+
+    // lista filtrada dinamicamente segun la busqueda
+    val notasFiltradas = remember(notes, filtroBusqueda) {
+        if (filtroBusqueda.isBlank()) {
+            notes
+        } else {
+            notes.filter {
+                it.title.contains(filtroBusqueda, ignoreCase = true) ||
+                it.content.contains(filtroBusqueda, ignoreCase = true)
+            }
+        }
+    }
+
+    // ocultar mensaje tras 3 segundos
+    LaunchedEffect(message) {
+        if (message.isNotBlank()) {
+            delay(3000)
+            message = ""
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -40,7 +81,7 @@ fun NotasScreen(
             .background(FondoApp)
             .padding(16.dp)
     ) {
-        // Cabecera
+        // cabecera
         Text(
             text = "Cuaderno de Tareas y Avances",
             fontSize = 22.sp,
@@ -54,7 +95,7 @@ fun NotasScreen(
         )
         Spacer(Modifier.height(14.dp))
 
-        // Formulario de ingreso rapido de nota
+        // formulario 2: ingreso con validacion visual por campo
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
@@ -65,31 +106,82 @@ fun NotasScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                // campo titulo con validacion visual
                 OutlinedTextField(
                     value = title,
-                    onValueChange = { title = it },
+                    onValueChange = {
+                        title = it
+                        if (errorTitulo != null) errorTitulo = null
+                    },
                     label = { Text("Título de la Tarea / Estudiante") },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                    singleLine = true,
+                    isError = errorTitulo != null,
+                    trailingIcon = {
+                        if (errorTitulo != null) {
+                            Icon(Icons.Default.Error, contentDescription = "Error", tint = MaterialTheme.colorScheme.error)
+                        }
+                    },
+                    supportingText = {
+                        errorTitulo?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                    }
                 )
 
+                // campo contenido con validacion visual
                 OutlinedTextField(
                     value = content,
-                    onValueChange = { content = it },
+                    onValueChange = {
+                        content = it
+                        if (errorContenido != null) errorContenido = null
+                    },
                     label = { Text("Observación o Avance del Objetivo (OA)") },
                     modifier = Modifier.fillMaxWidth(),
-                    minLines = 2
+                    minLines = 2,
+                    isError = errorContenido != null,
+                    trailingIcon = {
+                        if (errorContenido != null) {
+                            Icon(Icons.Default.Error, contentDescription = "Error", tint = MaterialTheme.colorScheme.error)
+                        }
+                    },
+                    supportingText = {
+                        errorContenido?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                    }
                 )
 
                 Button(
                     onClick = {
-                        viewModel.guardarNota(title, content) { exito, msg ->
-                            message = msg
-                            if (exito) {
-                                title = ""
-                                content = ""
+                        // validacion de campos
+                        var esValido = true
+                        if (title.isBlank()) {
+                            errorTitulo = "El título o estudiante es obligatorio"
+                            esValido = false
+                        } else if (title.trim().length < 3) {
+                            errorTitulo = "El título debe tener al menos 3 caracteres"
+                            esValido = false
+                        }
+
+                        if (content.isBlank()) {
+                            errorContenido = "La observación pedagógica es obligatoria"
+                            esValido = false
+                        } else if (content.trim().length < 5) {
+                            errorContenido = "La observación debe tener al menos 5 caracteres"
+                            esValido = false
+                        }
+
+                        if (esValido) {
+                            viewModel.guardarNota(title, content) { exito, msg ->
+                                if (exito) {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    message = msg
+                                    title = ""
+                                    content = ""
+                                    errorTitulo = null
+                                    errorContenido = null
+                                } else {
+                                    message = msg
+                                }
                             }
                         }
                     },
@@ -102,10 +194,15 @@ fun NotasScreen(
                     Text("Guardar Registro")
                 }
 
-                if (message.isNotBlank()) {
+                // animacion de feedback de confirmacion
+                AnimatedVisibility(
+                    visible = message.isNotBlank(),
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically()
+                ) {
                     Text(
                         text = message,
-                        color = AzulBarraSuperior,
+                        color = Color(0xFF2E7D32),
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium
                     )
@@ -113,17 +210,54 @@ fun NotasScreen(
             }
         }
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(14.dp))
 
-        // Lista de notas persistidas en Room
-        Text(
-            text = "Registros guardados (${notes.size})",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            color = TextoOscuro
+        // barra de busqueda y filtro dinamico bonus track d
+        OutlinedTextField(
+            value = filtroBusqueda,
+            onValueChange = { filtroBusqueda = it },
+            placeholder = { Text("Filtrar registros en tiempo real...") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            leadingIcon = {
+                Icon(Icons.Default.Search, contentDescription = "Buscar", tint = AzulBarraSuperior)
+            },
+            trailingIcon = {
+                if (filtroBusqueda.isNotBlank()) {
+                    IconButton(onClick = { filtroBusqueda = "" }) {
+                        Icon(Icons.Default.Clear, contentDescription = "Limpiar filtro")
+                    }
+                }
+            },
+            shape = RoundedCornerShape(12.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = BlancoTarjeta,
+                unfocusedContainerColor = BlancoTarjeta
+            )
         )
-        Spacer(Modifier.height(8.dp))
 
+        Spacer(Modifier.height(10.dp))
+
+        // encabezado de la lista con conteo
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = if (filtroBusqueda.isBlank()) {
+                    "Registros guardados (${notes.size})"
+                } else {
+                    "Resultados (${notasFiltradas.size} de ${notes.size})"
+                },
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                color = TextoOscuro
+            )
+        }
+        Spacer(Modifier.height(6.dp))
+
+        // lista reactiva de room
         if (notes.isEmpty()) {
             Box(
                 modifier = Modifier
@@ -138,6 +272,19 @@ fun NotasScreen(
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
             }
+        } else if (notasFiltradas.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "No se encontraron coincidencias para \"$filtroBusqueda\".",
+                    color = GrisTexto,
+                    fontSize = 14.sp
+                )
+            }
         } else {
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -145,12 +292,13 @@ fun NotasScreen(
                     .fillMaxWidth()
                     .weight(1f)
             ) {
-                items(items = notes, key = { it.id }) { note ->
+                items(items = notasFiltradas, key = { it.id }) { note ->
                     ItemNotaCard(
                         note = note,
                         onEliminar = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             viewModel.eliminarNota(note)
-                            message = "Registro eliminado."
+                            message = "Registro eliminado correctamente."
                         }
                     )
                 }
@@ -159,7 +307,7 @@ fun NotasScreen(
     }
 }
 
-// Componente modular para mostrar cada tarjeta de nota individual
+// componente modular para mostrar cada tarjeta de nota individual
 @Composable
 fun ItemNotaCard(
     note: Note,
