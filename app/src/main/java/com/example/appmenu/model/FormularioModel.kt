@@ -7,5 +7,7 @@ data class FormularioModel(
     val aceptaTerminos: Boolean = false,
     val activo: Boolean = false,
     val fecha: Long? = null,
-    val categoria: String = ""
+    val categoria: String = "",
+    val esTarea: Boolean = false,
+    val unidadId: String = ""
 )
