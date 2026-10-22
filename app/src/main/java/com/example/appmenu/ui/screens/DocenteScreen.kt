@@ -36,13 +36,15 @@ import androidx.compose.ui.unit.sp
 import com.example.appmenu.model.ConfiguracionEducativa
 import com.example.appmenu.model.ProgresoAsignatura
 import com.example.appmenu.ui.componentes.FilaProgresoAsignatura
+import com.example.appmenu.ui.componentes.TarjetaAccionDocente
 import com.example.appmenu.ui.theme.*
 
 // pantalla: panel docente con progreso por asignatura integrado en cada curso mpaz pro 2.º
 
 @Composable
 fun DocenteScreen(
-    onNavegarFormulario: () -> Unit = {},
+    onNavegarGestionContenidos: () -> Unit = {},
+    onNavegarAsignarTarea: () -> Unit = {},
     onNavegarNotas: () -> Unit = {},
     onNavegarInformeEstudiante: () -> Unit = {},
     onSeleccionarAsignatura: (String) -> Unit = {}
@@ -126,13 +128,13 @@ fun DocenteScreen(
                     }
                 )
 
-                // 2. gestionar contenidos morado -> abre formulario
+                // 2. gestionar contenidos morado -> abre gestionar contenidos y alumnos
                 TarjetaAccionDocente(
                     titulo = "Gestionar contenidos",
                     color = Color(0xFF8E24AA),
                     icono = Icons.Default.Settings,
                     modifier = Modifier.weight(1f),
-                    onClick = onNavegarFormulario
+                    onClick = onNavegarGestionContenidos
                 )
             }
 
@@ -149,13 +151,13 @@ fun DocenteScreen(
                     onClick = onNavegarInformeEstudiante
                 )
 
-                // 4. asignar tarea escolar naranja -> abre formulario en modo tarea
+                // 4. asignar tarea escolar naranja -> abre directamente formulario de tareas
                 TarjetaAccionDocente(
                     titulo = "Asignar Tarea Escolar",
                     color = Color(0xFFFB8C00),
                     icono = Icons.Default.PostAdd,
                     modifier = Modifier.weight(1f),
-                    onClick = onNavegarFormulario
+                    onClick = onNavegarAsignarTarea
                 )
             }
 
@@ -415,54 +417,6 @@ fun DocenteScreen(
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun TarjetaAccionDocente(
-    titulo: String,
-    color: Color,
-    icono: ImageVector,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = modifier
-            .height(115.dp)
-            .clickable { onClick() },
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = color),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(14.dp),
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.25f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = icono,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-
-            Text(
-                text = titulo,
-                color = Color.White,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Bold,
-                lineHeight = 16.sp
-            )
         }
     }
 }

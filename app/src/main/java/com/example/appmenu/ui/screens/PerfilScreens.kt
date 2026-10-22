@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.appmenu.data.CamaraUriFactory
+import com.example.appmenu.ui.componentes.FilaDatoPerfil
 import com.example.appmenu.ui.componentes.ImagenInteligente
 import com.example.appmenu.ui.theme.*
 import com.example.appmenu.viewmodel.EstadoViewModel
@@ -41,6 +42,7 @@ import com.example.appmenu.viewmodel.PerfilViewModel
 
 @Composable
 fun PerfilScreen(
+    esDocente: Boolean = false,
     perfilViewModel: PerfilViewModel = viewModel(),
     estadoViewModel: EstadoViewModel = viewModel(),
     onCerrarSesion: () -> Unit = {}
@@ -51,7 +53,6 @@ fun PerfilScreen(
     // configuracion desde datastore
     val modoAudioActivo by estadoViewModel.estadoActivado.collectAsState()
     var notificacionesActivas by remember { mutableStateOf(true) }
-    var modoOscuroActivo by remember { mutableStateOf(false) }
 
     // launcher para galeria
     val galeriaLauncher = rememberLauncherForActivityResult(
@@ -135,14 +136,14 @@ fun PerfilScreen(
                 ImagenInteligente(imagenUri = imagenUri)
 
                 Text(
-                    text = "Martina González",
+                    text = if (esDocente) "Prof. Andrea Valenzuela" else "Martina González",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = TextoOscuro
                 )
 
                 Text(
-                    text = "Editar fotografía de credencial",
+                    text = if (esDocente) "Docente titular 2.° Básico" else "Editar fotografía de credencial",
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Medium,
                     color = AzulBarraSuperior
@@ -176,7 +177,7 @@ fun PerfilScreen(
             }
         }
 
-        // seccion: informacion del estudiante mockup screen 11
+        // seccion: informacion del usuario mockup screen 11
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
@@ -194,9 +195,16 @@ fun PerfilScreen(
                     color = TextoOscuro
                 )
 
-                FilaDatoPerfil("Curso", "2.° Básico", Icons.Default.School)
-                FilaDatoPerfil("Usuario", "martina", Icons.Default.Person)
-                FilaDatoPerfil("Contraseña", "••••••••", Icons.Default.Lock)
+                if (esDocente) {
+                    FilaDatoPerfil("Cargo", "Docente General Básica", Icons.Default.School)
+                    FilaDatoPerfil("Curso Asignado", "2.° Básico", Icons.Default.School)
+                    FilaDatoPerfil("Usuario", "prof.andrea", Icons.Default.Person)
+                    FilaDatoPerfil("Contraseña", "••••••••", Icons.Default.Lock)
+                } else {
+                    FilaDatoPerfil("Curso", "2.° Básico", Icons.Default.School)
+                    FilaDatoPerfil("Usuario", "martina", Icons.Default.Person)
+                    FilaDatoPerfil("Contraseña", "••••••••", Icons.Default.Lock)
+                }
             }
         }
 
@@ -249,26 +257,16 @@ fun PerfilScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.Notifications, contentDescription = null, tint = AzulBarraSuperior, modifier = Modifier.size(20.dp))
                         Spacer(modifier = Modifier.width(10.dp))
-                        Text("Notificaciones de tareas", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = TextoOscuro)
+                        Text(
+                            text = if (esDocente) "Notificaciones de entregas" else "Notificaciones de tareas",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = TextoOscuro
+                        )
                     }
                     Switch(
                         checked = notificacionesActivas,
                         onCheckedChange = { notificacionesActivas = it }
-                    )
-                }
-
-                HorizontalDivider(color = Color(0xFFF1F5F9))
-
-                // 3. modo oscuro
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text("Modo oscuro", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = TextoOscuro)
-                    Switch(
-                        checked = modoOscuroActivo,
-                        onCheckedChange = { modoOscuroActivo = it }
                     )
                 }
             }
@@ -287,24 +285,4 @@ fun PerfilScreen(
             Text("Cerrar sesión / Cambiar de perfil")
         }
     }
-}
-
-@Composable
-fun FilaDatoPerfil(
-    etiqueta: String,
-    valor: String,
-    icono: androidx.compose.ui.graphics.vector.ImageVector
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(icono, contentDescription = null, tint = GrisTexto, modifier = Modifier.size(18.dp))
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(etiqueta, fontSize = 13.sp, color = GrisTexto)
-        }
-        Text(valor, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = TextoOscuro)
-    }
-}
+}

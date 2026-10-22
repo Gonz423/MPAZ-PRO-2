@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.sp
 import com.example.appmenu.model.ActividadesManager
 import com.example.appmenu.ui.theme.*
 
-// pantalla: actividad didactica interactiva y feedback mockup screens 6 y 7 mpaz pro 2.º
+// PANTALLA: ACTIVIDAD DIDÁCTICA INTERACTIVA Y FEEDBACK (MOCKUP SCREENS 6 Y 7 MPAZ PRO 2.º)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,7 +43,7 @@ fun ActividadInteractivaScreen(
     val haptic = LocalHapticFeedback.current
     val todosLosEjercicios by ActividadesManager.ejercicios.collectAsState()
 
-    // buscar el ejercicio activo
+    // Buscar el ejercicio activo
     val ejercicio = remember(todosLosEjercicios, ejercicioId) {
         todosLosEjercicios.find { it.id == ejercicioId } ?: todosLosEjercicios.firstOrNull()
     }
@@ -98,7 +98,7 @@ fun ActividadInteractivaScreen(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // barra de progreso de la actividad
+                // Barra de progreso de la actividad
                 LinearProgressIndicator(
                     progress = { if (mostrarExito) 1f else 0.5f },
                     modifier = Modifier
@@ -109,7 +109,7 @@ fun ActividadInteractivaScreen(
                     trackColor = Color(0xFFE0E0E0)
                 )
 
-                // tarjeta de contexto / titulo de la guia
+                // TARJETA DE CONTEXTO / TÍTULO DE LA GUÍA
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(14.dp),
@@ -134,7 +134,7 @@ fun ActividadInteractivaScreen(
                     }
                 }
 
-                // pregunta didactica
+                // PREGUNTA DIDACTICA
                 Text(
                     text = ejercicio?.pregunta ?: "¿Cuál es la respuesta correcta?",
                     fontSize = 17.sp,
@@ -148,7 +148,7 @@ fun ActividadInteractivaScreen(
                     color = GrisTexto
                 )
 
-                // opciones interactivas
+                // OPCIONES INTERACTIVAS
                 val opciones = ejercicio?.opciones ?: listOf("Opción 1", "Opción 2", "Opción 3")
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     opciones.forEachIndexed { index, opcionTexto ->
@@ -197,7 +197,7 @@ fun ActividadInteractivaScreen(
                     }
                 }
 
-                // mensaje de retroalimentacion de error
+                // MENSAJE DE RETROALIMENTACIÓN DE ERROR
                 mensajeError?.let { msg ->
                     Surface(
                         color = Color(0xFFFFEBEE),
@@ -217,7 +217,7 @@ fun ActividadInteractivaScreen(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // boton de respuesta
+                // BOTÓN DE RESPUESTA
                 Button(
                     onClick = {
                         if (opcionSeleccionada == null) {
@@ -246,7 +246,7 @@ fun ActividadInteractivaScreen(
                 }
             }
 
-            // dialogo modal: ¡muy bien! con estrella ⭐ mockup screen 7 mpaz pro 2.º
+            // DIÁLOGO MODAL: ¡MUY BIEN! CON ESTRELLA ⭐ (MOCKUP SCREEN 7 MPAZ PRO 2.º)
             AnimatedVisibility(
                 visible = mostrarExito,
                 enter = fadeIn() + scaleIn(),
@@ -264,7 +264,7 @@ fun ActividadInteractivaScreen(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            // estrella dorada animada
+                            // Estrella dorada animada
                             Box(
                                 modifier = Modifier
                                     .size(70.dp)

@@ -24,6 +24,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.appmenu.ui.componentes.BarraAsignaturaProgreso
+import com.example.appmenu.ui.componentes.FilaUltimaActividad
 import com.example.appmenu.ui.theme.*
 
 // pantalla: mi progreso mockup screen 10 mpaz pro 2.º
@@ -174,68 +176,5 @@ fun ProgresoScreen(
                 Icon(Icons.Default.ChevronRight, contentDescription = null, tint = AzulBarraSuperior)
             }
         }
-    }
-}
-
-@Composable
-fun BarraAsignaturaProgreso(
-    nombre: String,
-    porcentaje: Int,
-    color: Color
-) {
-    val animProgress by animateFloatAsState(
-        targetValue = porcentaje / 100f,
-        label = "Progreso $nombre"
-    )
-
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(nombre, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = TextoOscuro)
-            Text("$porcentaje%", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = color)
-        }
-        LinearProgressIndicator(
-            progress = { animProgress },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(8.dp)
-                .clip(RoundedCornerShape(4.dp)),
-            color = color,
-            trackColor = color.copy(alpha = 0.15f)
-        )
-    }
-}
-
-@Composable
-fun FilaUltimaActividad(
-    titulo: String,
-    puntaje: String,
-    completado: Boolean
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                imageVector = if (completado) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
-                contentDescription = null,
-                tint = if (completado) Color(0xFF2E7D32) else GrisTexto,
-                modifier = Modifier.size(18.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(titulo, fontSize = 14.sp, color = TextoOscuro)
-        }
-        Text(
-            text = puntaje,
-            fontSize = 13.sp,
-            fontWeight = FontWeight.Bold,
-            color = if (completado) Color(0xFF2E7D32) else GrisTexto
-        )
     }
 }

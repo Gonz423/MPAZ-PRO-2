@@ -17,17 +17,13 @@ import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.School
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.Alignment
-import kotlinx.coroutines.delay
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.appmenu.model.ConfiguracionEducativa
@@ -52,7 +48,8 @@ sealed class Ruta(val id: String) {
 
     // flujo docente mockup screens 12, 13
     object DocentePanel        : Ruta("doc_panel")
-    object DocenteActividad    : Ruta("doc_actividad")
+    object DocenteGestion      : Ruta("doc_gestion")
+    object DocenteFormulario   : Ruta("doc_formulario")
     object DocenteCuaderno     : Ruta("doc_cuaderno")
     object DocenteInforme      : Ruta("doc_informe")
     object DocentePerfil       : Ruta("doc_perfil")
@@ -75,6 +72,7 @@ class MainActivity : FragmentActivity() {
                 var verActividadInteractiva by remember { mutableStateOf(false) }
                 var actividadSeleccionadaId by remember { mutableStateOf<String?>(null) }
                 var categoriaFormulario by remember { mutableStateOf<String?>(null) }
+                var estudianteSeleccionadoInforme by remember { mutableStateOf<String?>(null) }
 
                 // 0. pantalla de bienvenida / portada splash 3 segundos
                 if (ruta == Ruta.Splash) {
@@ -167,34 +165,69 @@ class MainActivity : FragmentActivity() {
                         onNavegarFormulario = { nombreAsignatura ->
                             categoriaFormulario = nombreAsignatura
                             materiaSeleccionada = null
-                            ruta = if (esEstudiante) Ruta.EstudianteInicio else Ruta.DocenteActividad
+                            ruta = if (esEstudiante) Ruta.EstudianteInicio else Ruta.DocenteFormulario
                         }
                     )
                     return@AppMenuTheme
                 }
 
                 // 5. scaffold principal con topbar y bottom navigation mockup screens 3, 10, 11, 12
+                val (colorBarra, tituloBarra) = when (ruta) {
+                    Ruta.DocentePanel -> Pair(AzulBarraSuperior, "MPAZ PRO 2.º · Docente")
+                    Ruta.DocenteGestion -> Pair(Color(0xFF8E24AA), "Gestión de Contenidos y Alumnos")
+                    Ruta.DocenteInforme -> Pair(
+                        Color(0xFF43A047),
+                        if (estudianteSeleccionadoInforme != null) "Informe: $estudianteSeleccionadoInforme" else "Rendimiento General del Curso"
+                    )
+                    Ruta.DocenteFormulario -> Pair(Color(0xFFFB8C00), "Asignar Tarea Escolar")
+                    Ruta.DocenteCuaderno -> Pair(Color(0xFF2E7D32), "Cuaderno de Tareas y Observaciones")
+                    Ruta.DocentePerfil -> Pair(AzulBarraSuperior, "Perfil Docente")
+
+                    Ruta.EstudianteInicio -> Pair(AzulBarraSuperior, "MPAZ PRO 2.º · Estudiante")
+                    Ruta.EstudianteProgreso -> Pair(AzulBarraSuperior, "Progreso Académico")
+                    Ruta.EstudianteCuaderno -> Pair(Color(0xFF2E7D32), "Mi Cuaderno de Tareas")
+                    Ruta.EstudiantePerfil -> Pair(AzulBarraSuperior, "Perfil del Estudiante")
+                    else -> Pair(AzulBarraSuperior, tituloPerfil)
+                }
+
+                val esPantallaRaiz = ruta == Ruta.EstudianteInicio || ruta == Ruta.DocentePanel
+
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
 
-                    // barra superior
                     topBar = {
                         TopAppBar(
                             colors = TopAppBarDefaults.topAppBarColors(
-                                containerColor = AzulBarraSuperior,
+                                containerColor = colorBarra,
                                 titleContentColor = Color.White,
                                 navigationIconContentColor = Color.White
                             ),
                             navigationIcon = {
-                                IconButton(onClick = { ruta = Ruta.Selector }) {
+                                IconButton(onClick = {
+                                    when (ruta) {
+                                        Ruta.EstudianteInicio, Ruta.DocentePanel -> ruta = Ruta.Selector
+                                        Ruta.EstudianteProgreso, Ruta.EstudianteCuaderno, Ruta.EstudiantePerfil -> ruta = Ruta.EstudianteInicio
+                                        Ruta.DocenteInforme -> {
+                                            if (estudianteSeleccionadoInforme != null) ruta = Ruta.DocenteGestion
+                                            else ruta = Ruta.DocentePanel
+                                        }
+                                        else -> ruta = Ruta.DocentePanel
+                                    }
+                                }) {
                                     Icon(
                                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                        contentDescription = "Cambiar usuario"
+                                        contentDescription = if (esPantallaRaiz) "Cambiar usuario" else "Volver"
                                     )
                                 }
                             },
                             title = {
-                                Text(text = tituloPerfil, fontWeight = FontWeight.Bold, fontSize = 17.sp)
+                                Text(
+                                    text = tituloBarra,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 17.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
                             }
                         )
                     },
@@ -234,10 +267,10 @@ class MainActivity : FragmentActivity() {
                                     onClick = { materiaSeleccionada = null; ruta = Ruta.DocentePanel }
                                 )
                                 TabNavItem(
-                                    seleccionado = ruta == Ruta.DocenteActividad,
+                                    seleccionado = ruta == Ruta.DocenteGestion,
                                     icono = Icons.AutoMirrored.Filled.Assignment,
                                     etiqueta = "Gestionar",
-                                    onClick = { materiaSeleccionada = null; ruta = Ruta.DocenteActividad }
+                                    onClick = { materiaSeleccionada = null; ruta = Ruta.DocenteGestion }
                                 )
                                 TabNavItem(
                                     seleccionado = ruta == Ruta.DocentePerfil,
@@ -262,28 +295,45 @@ class MainActivity : FragmentActivity() {
                             Ruta.EstudianteProgreso -> ProgresoScreen(
                                 onAbrirCuaderno = { ruta = Ruta.EstudianteCuaderno }
                             )
-                            Ruta.EstudianteCuaderno -> NotasScreen(
-                                onVolver = { ruta = Ruta.EstudianteProgreso }
-                            )
+                            Ruta.EstudianteCuaderno -> NotasScreen()
                             Ruta.EstudiantePerfil   -> PerfilScreen(
+                                esDocente = false,
                                 onCerrarSesion = { ruta = Ruta.Selector }
                             )
 
                             // flujo docente
                             Ruta.DocentePanel -> DocenteScreen(
-                                onNavegarFormulario = { ruta = Ruta.DocenteActividad },
-                                onNavegarNotas      = { ruta = Ruta.DocenteCuaderno },
-                                onNavegarInformeEstudiante = { ruta = Ruta.DocenteInforme },
-                                onSeleccionarAsignatura = { idMateria -> materiaSeleccionada = idMateria }
+                                onNavegarGestionContenidos = { ruta = Ruta.DocenteGestion },
+                                onNavegarAsignarTarea      = { categoriaFormulario = null; ruta = Ruta.DocenteFormulario },
+                                onNavegarNotas             = { ruta = Ruta.DocenteCuaderno },
+                                onNavegarInformeEstudiante = {
+                                    estudianteSeleccionadoInforme = null
+                                    ruta = Ruta.DocenteInforme
+                                },
+                                onSeleccionarAsignatura    = { idMateria -> materiaSeleccionada = idMateria }
                             )
-                            Ruta.DocenteActividad -> FormularioScreen(categoriaInicial = categoriaFormulario)
-                            Ruta.DocenteCuaderno  -> NotasScreen(
-                                onVolver = { ruta = Ruta.DocentePanel }
+                            Ruta.DocenteGestion -> GestionarContenidosScreen(
+                                onVolver = { ruta = Ruta.DocentePanel },
+                                onCrearNuevaGuia = {
+                                    categoriaFormulario = null
+                                    ruta = Ruta.DocenteFormulario
+                                },
+                                onVerInformeEstudiante = { nombreEstudiante ->
+                                    estudianteSeleccionadoInforme = nombreEstudiante
+                                    ruta = Ruta.DocenteInforme
+                                }
                             )
+                            Ruta.DocenteFormulario -> FormularioScreen(categoriaInicial = categoriaFormulario)
+                            Ruta.DocenteCuaderno  -> NotasScreen()
                             Ruta.DocenteInforme   -> InformeEstudianteScreen(
-                                onVolver = { ruta = Ruta.DocentePanel }
+                                nombreEstudiante = estudianteSeleccionadoInforme,
+                                onVolver = {
+                                    if (estudianteSeleccionadoInforme != null) ruta = Ruta.DocenteGestion
+                                    else ruta = Ruta.DocentePanel
+                                }
                             )
                             Ruta.DocentePerfil    -> PerfilScreen(
+                                esDocente = true,
                                 onCerrarSesion = { ruta = Ruta.Selector }
                             )
 
@@ -301,31 +351,5 @@ class MainActivity : FragmentActivity() {
                 }
             }
         }
-    }
-}
-
-// componente: pantalla de portada splash screen con imagen portada.png
-@Composable
-fun SplashScreen(
-    onTiempoTerminado: () -> Unit
-) {
-    LaunchedEffect(Unit) {
-        delay(3000)
-        onTiempoTerminado()
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
-            .clickable { onTiempoTerminado() },
-        contentAlignment = Alignment.Center
-    ) {
-        Image(
-            painter = painterResource(id = R.drawable.portada),
-            contentDescription = "Portada MPAZ PRO",
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-        )
     }
 }

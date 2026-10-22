@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.appmenu.room.Note
+import com.example.appmenu.ui.componentes.ItemNotaCard
 import com.example.appmenu.ui.theme.*
 import com.example.appmenu.viewmodel.NotasViewModel
 import kotlinx.coroutines.delay
@@ -206,7 +207,7 @@ fun NotasScreen(
                     },
                     modifier = Modifier.fillMaxWidth().height(46.dp),
                     shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = AzulBarraSuperior)
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32))
                 ) {
                     Icon(Icons.Default.NoteAdd, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
@@ -324,49 +325,4 @@ fun NotasScreen(
             }
         }
     }
-}
-
-// componente modular para mostrar cada tarjeta de nota individual
-@Composable
-fun ItemNotaCard(
-    note: Note,
-    onEliminar: () -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = BlancoTarjeta),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(14.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = note.title,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TextoOscuro
-                )
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = note.content,
-                    fontSize = 13.sp,
-                    color = GrisTexto
-                )
-            }
-
-            IconButton(onClick = onEliminar) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Eliminar",
-                    tint = Color(0xFFEF5350)
-                )
-            }
-        }
-    }
-}
+}
