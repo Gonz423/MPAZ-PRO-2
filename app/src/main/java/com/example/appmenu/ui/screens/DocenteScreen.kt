@@ -158,6 +158,48 @@ fun DocenteScreen(
                     onClick = onNavegarFormulario
                 )
             }
+
+            // 5. tarjeta destacada para cuaderno de observaciones y tareas
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onNavegarNotas() },
+                shape = RoundedCornerShape(14.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E9)),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFC8E6C9))
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(42.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF2E7D32)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Default.PostAdd, contentDescription = null, tint = Color.White)
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Cuaderno de Tareas y Observaciones",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF1B5E20)
+                        )
+                        Text(
+                            text = "Observaciones generales de asignaturas, cursos y estudiantes",
+                            fontSize = 12.sp,
+                            color = GrisTexto
+                        )
+                    }
+                    Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color(0xFF2E7D32))
+                }
+            }
         }
 
         // seccion: cursos asignados con progreso por asignatura al apretar cada curso

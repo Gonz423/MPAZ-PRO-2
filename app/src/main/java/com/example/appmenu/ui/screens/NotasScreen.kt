@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Error
@@ -36,7 +37,8 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun NotasScreen(
-    viewModel: NotasViewModel = viewModel()
+    viewModel: NotasViewModel = viewModel(),
+    onVolver: (() -> Unit)? = null
 ) {
     var title by remember { mutableStateOf("") }
     var content by remember { mutableStateOf("") }
@@ -82,17 +84,34 @@ fun NotasScreen(
             .padding(16.dp)
     ) {
         // cabecera
-        Text(
-            text = "Cuaderno de Tareas y Avances",
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold,
-            color = TextoOscuro
-        )
-        Text(
-            text = "Escuela Marcela Paz · Registro Pedagógico Local (Room)",
-            fontSize = 13.sp,
-            color = GrisTexto
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            if (onVolver != null) {
+                IconButton(onClick = onVolver) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Volver",
+                        tint = TextoOscuro
+                    )
+                }
+                Spacer(modifier = Modifier.width(4.dp))
+            }
+            Column {
+                Text(
+                    text = "Cuaderno de Tareas y Avances",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextoOscuro
+                )
+                Text(
+                    text = "Escuela Marcela Paz · Observaciones generales de asignaturas y cursos",
+                    fontSize = 12.sp,
+                    color = GrisTexto
+                )
+            }
+        }
         Spacer(Modifier.height(14.dp))
 
         // formulario 2: ingreso con validacion visual por campo

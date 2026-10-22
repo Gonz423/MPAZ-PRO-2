@@ -262,7 +262,9 @@ class MainActivity : FragmentActivity() {
                             Ruta.EstudianteProgreso -> ProgresoScreen(
                                 onAbrirCuaderno = { ruta = Ruta.EstudianteCuaderno }
                             )
-                            Ruta.EstudianteCuaderno -> NotasScreen()
+                            Ruta.EstudianteCuaderno -> NotasScreen(
+                                onVolver = { ruta = Ruta.EstudianteProgreso }
+                            )
                             Ruta.EstudiantePerfil   -> PerfilScreen(
                                 onCerrarSesion = { ruta = Ruta.Selector }
                             )
@@ -275,7 +277,9 @@ class MainActivity : FragmentActivity() {
                                 onSeleccionarAsignatura = { idMateria -> materiaSeleccionada = idMateria }
                             )
                             Ruta.DocenteActividad -> FormularioScreen(categoriaInicial = categoriaFormulario)
-                            Ruta.DocenteCuaderno  -> NotasScreen()
+                            Ruta.DocenteCuaderno  -> NotasScreen(
+                                onVolver = { ruta = Ruta.DocentePanel }
+                            )
                             Ruta.DocenteInforme   -> InformeEstudianteScreen(
                                 onVolver = { ruta = Ruta.DocentePanel }
                             )
