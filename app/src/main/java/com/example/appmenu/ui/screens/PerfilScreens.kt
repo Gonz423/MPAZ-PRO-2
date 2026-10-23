@@ -38,7 +38,7 @@ import com.example.appmenu.ui.theme.*
 import com.example.appmenu.viewmodel.EstadoViewModel
 import com.example.appmenu.viewmodel.PerfilViewModel
 
-// pantalla: perfil del estudiante y configuracion mockup screen 11 mpaz pro 2.º
+// pantalla: perfil del estudiante y configuracion mockup screen
 
 @Composable
 fun PerfilScreen(
@@ -177,7 +177,7 @@ fun PerfilScreen(
             }
         }
 
-        // seccion: informacion del usuario mockup screen 11
+        // seccion: informacion del usuario mockup
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
@@ -208,7 +208,7 @@ fun PerfilScreen(
             }
         }
 
-        // seccion: configuracion mockup screen 11
+        // seccion: configuracion mockup
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
@@ -285,4 +285,4 @@ fun PerfilScreen(
             Text("Cerrar sesión / Cambiar de perfil")
         }
     }
-}
+}

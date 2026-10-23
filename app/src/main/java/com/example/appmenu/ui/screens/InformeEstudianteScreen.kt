@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.sp
 import com.example.appmenu.ui.componentes.BarraAsignaturaProgreso
 import com.example.appmenu.ui.theme.*
 
-// pantalla: informe de rendimiento del estudiante mockup screen 13 mpaz pro 2.º
+// pantalla: informe de rendimiento del estudiante mockup
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,7 +39,7 @@ fun InformeEstudianteScreen(
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
 
-    // [modificado]: estado para clasificar rendimiento general entre 2.° a y 2.° b
+    // estado para clasificar rendimiento general entre 2.° a y 2.° b
     var cursoSeleccionadoRendimiento by remember { mutableStateOf("2.° Básico - A") }
 
     // metricas dinamicas segun el curso seleccionado
@@ -74,7 +74,7 @@ fun InformeEstudianteScreen(
                 color = GrisTexto
             )
         }
-            // [modificado]: selector de clasificacion segundo a y segundo b solo en vista general
+            // selector de clasificacion segundo a y segundo b solo en vista general
             if (nombreEstudiante == null) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -140,7 +140,7 @@ fun InformeEstudianteScreen(
                     Spacer(modifier = Modifier.width(14.dp))
 
                     Column {
-                        // [modificado]: muestra 2.° basico a o b segun el chip seleccionado
+                        // muestra 2.° basico a o b segun el chip seleccionado
                         Text(
                             text = nombreEstudiante ?: cursoSeleccionadoRendimiento,
                             fontSize = 18.sp,

@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.sp
 import com.example.appmenu.model.ActividadesManager
 import com.example.appmenu.ui.theme.*
 
-// PANTALLA: ACTIVIDAD DIDÁCTICA INTERACTIVA Y FEEDBACK (MOCKUP SCREENS 6 Y 7 MPAZ PRO 2.º)
+// PANTALLA: ACTIVIDAD DIDACTICA INTERACTIVA Y FEEDBACK
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -109,7 +109,7 @@ fun ActividadInteractivaScreen(
                     trackColor = Color(0xFFE0E0E0)
                 )
 
-                // TARJETA DE CONTEXTO / TÍTULO DE LA GUÍA
+                // TARJETA DE CONTEXTO / TITULO DE LA GUIA
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(14.dp),
@@ -197,7 +197,7 @@ fun ActividadInteractivaScreen(
                     }
                 }
 
-                // MENSAJE DE RETROALIMENTACIÓN DE ERROR
+                // MENSAJE DE RETROALIMENTACION DE ERROR
                 mensajeError?.let { msg ->
                     Surface(
                         color = Color(0xFFFFEBEE),
@@ -217,7 +217,7 @@ fun ActividadInteractivaScreen(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // BOTÓN DE RESPUESTA
+                // BOTON DE RESPUESTA
                 Button(
                     onClick = {
                         if (opcionSeleccionada == null) {
@@ -246,7 +246,7 @@ fun ActividadInteractivaScreen(
                 }
             }
 
-            // DIÁLOGO MODAL: ¡MUY BIEN! CON ESTRELLA ⭐ (MOCKUP SCREEN 7 MPAZ PRO 2.º)
+            // DIALOGO MODAL
             AnimatedVisibility(
                 visible = mostrarExito,
                 enter = fadeIn() + scaleIn(),

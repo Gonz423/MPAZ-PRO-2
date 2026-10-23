@@ -45,9 +45,8 @@ fun NotasScreen(
     var content by remember { mutableStateOf("") }
     var message by remember { mutableStateOf("") }
 
-    // estados de validacion visual del formulario 2
-    var errorTitulo by remember { mutableStateOf<String?>(null) }
-    var errorContenido by remember { mutableStateOf<String?>(null) }
+    // flujo reactivo de errores observado desde el ViewModel
+    val errores by viewModel.errores.collectAsState()
 
     // estado del filtro dinamico bonus track d
     var filtroBusqueda by remember { mutableStateOf("") }
@@ -128,80 +127,56 @@ fun NotasScreen(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // campo titulo con validacion visual
+                // campo titulo con validacion visual desde ViewModel
                 OutlinedTextField(
                     value = title,
                     onValueChange = {
                         title = it
-                        if (errorTitulo != null) errorTitulo = null
+                        viewModel.limpiarErrorTitulo()
                     },
                     label = { Text("Título de la Tarea / Estudiante") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    isError = errorTitulo != null,
+                    isError = errores.titulo != null,
                     trailingIcon = {
-                        if (errorTitulo != null) {
+                        if (errores.titulo != null) {
                             Icon(Icons.Default.Error, contentDescription = "Error", tint = MaterialTheme.colorScheme.error)
                         }
                     },
                     supportingText = {
-                        errorTitulo?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                        errores.titulo?.let { Text(it, color = MaterialTheme.colorScheme.error) }
                     }
                 )
 
-                // campo contenido con validacion visual
+                // campo contenido con validacion visual desde ViewModel
                 OutlinedTextField(
                     value = content,
                     onValueChange = {
                         content = it
-                        if (errorContenido != null) errorContenido = null
+                        viewModel.limpiarErrorContenido()
                     },
                     label = { Text("Observación o Avance del Objetivo (OA)") },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 2,
-                    isError = errorContenido != null,
+                    isError = errores.contenido != null,
                     trailingIcon = {
-                        if (errorContenido != null) {
+                        if (errores.contenido != null) {
                             Icon(Icons.Default.Error, contentDescription = "Error", tint = MaterialTheme.colorScheme.error)
                         }
                     },
                     supportingText = {
-                        errorContenido?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                        errores.contenido?.let { Text(it, color = MaterialTheme.colorScheme.error) }
                     }
                 )
 
                 Button(
                     onClick = {
-                        // validacion de campos
-                        var esValido = true
-                        if (title.isBlank()) {
-                            errorTitulo = "El título o estudiante es obligatorio"
-                            esValido = false
-                        } else if (title.trim().length < 3) {
-                            errorTitulo = "El título debe tener al menos 3 caracteres"
-                            esValido = false
-                        }
-
-                        if (content.isBlank()) {
-                            errorContenido = "La observación pedagógica es obligatoria"
-                            esValido = false
-                        } else if (content.trim().length < 5) {
-                            errorContenido = "La observación debe tener al menos 5 caracteres"
-                            esValido = false
-                        }
-
-                        if (esValido) {
-                            viewModel.guardarNota(title, content) { exito, msg ->
-                                if (exito) {
-                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    message = msg
-                                    title = ""
-                                    content = ""
-                                    errorTitulo = null
-                                    errorContenido = null
-                                } else {
-                                    message = msg
-                                }
+                        viewModel.guardarNota(title, content) { exito, msg ->
+                            message = msg
+                            if (exito) {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                title = ""
+                                content = ""
                             }
                         }
                     },

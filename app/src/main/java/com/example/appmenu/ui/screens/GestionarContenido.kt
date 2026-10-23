@@ -203,9 +203,6 @@ fun GestionarContenidosScreen(
 
             // contenido dinamico segun la pestaña activa
             if (tabSeleccionado == 0) {
-                // ==========================================
-                // vista: administrar guias creadas
-                // ==========================================
                 val guiasFiltradas = remember(todosLosEjercicios, filtroTexto) {
                     if (filtroTexto.isBlank()) todosLosEjercicios
                     else todosLosEjercicios.filter {
@@ -254,10 +251,7 @@ fun GestionarContenidosScreen(
                     }
                 }
             } else {
-                // ==========================================
                 // vista: alumnos del curso
-                // ==========================================
-                // [modificado]: filtra segun el texto y el curso todos, 2.° a o 2.° b
                 val alumnosFiltrados = remember(nominaAlumnos, filtroTexto, cursoFiltro) {
                     nominaAlumnos.filter { alumno ->
                         val coincideCurso = (cursoFiltro == "Todos" || alumno.curso == cursoFiltro)
@@ -338,7 +332,7 @@ private fun ItemGuiaDocente(
                         )
                     }
 
-                    // [modificado]: etiqueta del curso correspondiente
+                    // etiqueta del curso correspondiente
                     Surface(
                         color = Color(0xFF8E24AA).copy(alpha = 0.1f),
                         shape = RoundedCornerShape(6.dp)

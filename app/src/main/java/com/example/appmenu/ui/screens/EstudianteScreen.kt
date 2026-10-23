@@ -33,10 +33,10 @@ import com.example.appmenu.ui.theme.*
 import com.example.appmenu.viewmodel.EstadoViewModel
 import kotlinx.coroutines.delay
 
-// pantalla principal: perfil estudiante estilo mockup mpaz pro 2.º
+// pantalla principal del estudiante (dashboard con asignaturas y asistencia de lectura)
 
 @Composable
-fun PantallaPrincipal(
+fun EstudianteScreen(
     estadoViewModel: EstadoViewModel = viewModel(),
     onSeleccionarAsignatura: (String) -> Unit = {}
 ) {
@@ -240,4 +240,13 @@ fun PantallaPrincipal(
             }
         }
     }
+}
+
+// compatibilidad hacia atras por si se llama con el nombre antiguo
+@Composable
+fun PantallaPrincipal(
+    estadoViewModel: EstadoViewModel = viewModel(),
+    onSeleccionarAsignatura: (String) -> Unit = {}
+) {
+    EstudianteScreen(estadoViewModel, onSeleccionarAsignatura)
 }

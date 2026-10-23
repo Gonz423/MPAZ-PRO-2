@@ -289,7 +289,7 @@ class MainActivity : FragmentActivity() {
                     ) {
                         when (ruta) {
                             // flujo estudiante
-                            Ruta.EstudianteInicio -> PantallaPrincipal(
+                            Ruta.EstudianteInicio -> EstudianteScreen(
                                 onSeleccionarAsignatura = { idMateria -> materiaSeleccionada = idMateria }
                             )
                             Ruta.EstudianteProgreso -> ProgresoScreen(

@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.sp
 import com.example.appmenu.data.AudioHelper
 import com.example.appmenu.ui.theme.*
 
-// pantalla: detalle de leccion y contenido didactico mockup screen 5 mpaz pro 2.º
+// pantalla: detalle de leccion y contenido didactico mockup
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
