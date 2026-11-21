@@ -16,6 +16,7 @@ import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Analytics
+import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -209,13 +210,13 @@ class MainActivity : FragmentActivity() {
                         if (estudianteSeleccionadoInforme != null) "Informe: $estudianteSeleccionadoInforme" else "Rendimiento General del Curso"
                     )
                     Ruta.DocenteFormulario -> Pair(Color(0xFFFB8C00), "Asignar Tarea Escolar")
-                    Ruta.DocenteCuaderno -> Pair(Color(0xFF2E7D32), "Cuaderno de Tareas y Observaciones")
+                    Ruta.DocenteCuaderno -> Pair(Color(0xFF2E7D32), "Observaciones")
                     Ruta.DocentePerfil -> Pair(AzulBarraSuperior, "Perfil Docente")
 
                     Ruta.TriviaRuta -> Pair(Color(0xFF00897B), "Desafío de Ciencias · Trivia")
                     Ruta.EstudianteInicio -> Pair(AzulBarraSuperior, "MPAZ PRO 2.º · Estudiante")
                     Ruta.EstudianteProgreso -> Pair(AzulBarraSuperior, "Progreso Académico")
-                    Ruta.EstudianteCuaderno -> Pair(Color(0xFF2E7D32), "Mi Cuaderno de Tareas")
+                    Ruta.EstudianteCuaderno -> Pair(Color(0xFF2E7D32), "Observaciones")
                     Ruta.EstudiantePerfil -> Pair(AzulBarraSuperior, "Perfil del Estudiante")
                     else -> Pair(AzulBarraSuperior, tituloPerfil)
                 }
@@ -272,7 +273,7 @@ class MainActivity : FragmentActivity() {
                             tonalElevation = 6.dp
                         ) {
                             if (esEstudiante) {
-                                // tabs del estudiante inicio, progreso, perfil
+                                // tabs del estudiante: Inicio, Progreso, Observaciones, Perfil
                                 TabNavItem(
                                     seleccionado = ruta == Ruta.EstudianteInicio,
                                     icono = Icons.Default.School,
@@ -286,13 +287,19 @@ class MainActivity : FragmentActivity() {
                                     onClick = { materiaSeleccionada = null; ruta = Ruta.EstudianteProgreso }
                                 )
                                 TabNavItem(
+                                    seleccionado = ruta == Ruta.EstudianteCuaderno,
+                                    icono = Icons.Default.Book,
+                                    etiqueta = "Observaciones",
+                                    onClick = { materiaSeleccionada = null; ruta = Ruta.EstudianteCuaderno }
+                                )
+                                TabNavItem(
                                     seleccionado = ruta == Ruta.EstudiantePerfil,
                                     icono = Icons.Default.AccountCircle,
                                     etiqueta = "Perfil",
                                     onClick = { materiaSeleccionada = null; ruta = Ruta.EstudiantePerfil }
                                 )
                             } else {
-                                // tabs del docente inicio, gestionar, perfil
+                                // tabs del docente: Inicio, Gestionar, Observaciones, Perfil
                                 TabNavItem(
                                     seleccionado = ruta == Ruta.DocentePanel,
                                     icono = Icons.Default.Analytics,
@@ -304,6 +311,12 @@ class MainActivity : FragmentActivity() {
                                     icono = Icons.AutoMirrored.Filled.Assignment,
                                     etiqueta = "Gestionar",
                                     onClick = { materiaSeleccionada = null; ruta = Ruta.DocenteGestion }
+                                )
+                                TabNavItem(
+                                    seleccionado = ruta == Ruta.DocenteCuaderno,
+                                    icono = Icons.Default.Book,
+                                    etiqueta = "Observaciones",
+                                    onClick = { materiaSeleccionada = null; ruta = Ruta.DocenteCuaderno }
                                 )
                                 TabNavItem(
                                     seleccionado = ruta == Ruta.DocentePerfil,

@@ -100,13 +100,13 @@ fun NotasScreen(
             }
             Column {
                 Text(
-                    text = "Cuaderno de Tareas y Avances",
+                    text = "Observaciones",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = TextoOscuro
                 )
                 Text(
-                    text = "Escuela Marcela Paz · Observaciones generales de asignaturas y cursos",
+                    text = "Escuela Marcela Paz · Registro de observaciones pedagógicas",
                     fontSize = 12.sp,
                     color = GrisTexto
                 )

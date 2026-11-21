@@ -256,13 +256,13 @@ fun ProgresoScreen(
                 Spacer(modifier = Modifier.width(14.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Mi Cuaderno de Tareas",
+                        text = "Observaciones",
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
                         color = AzulBarraSuperior
                     )
                     Text(
-                        text = "Observaciones y notas de asignaturas y cursos",
+                        text = "Notas y observaciones de asignaturas y cursos",
                         fontSize = 12.sp,
                         color = GrisTexto
                     )

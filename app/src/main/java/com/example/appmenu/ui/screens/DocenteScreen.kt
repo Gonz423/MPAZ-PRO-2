@@ -202,7 +202,7 @@ fun DocenteScreen(
                     Spacer(modifier = Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Cuaderno de Tareas y Observaciones",
+                            text = "Observaciones y Apuntes",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF1B5E20)
