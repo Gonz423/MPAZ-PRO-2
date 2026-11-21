@@ -234,7 +234,7 @@ fun ActividadInteractivaScreen(
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 mensajeError = null
                                 ejercicio?.let { ej ->
-                                    ActividadesManager.marcarCompletado(ej.id)
+                                    ActividadesManager.marcarCompletado(ej.id, 10)
                                     // Sincronizacion HTTP con microservicio ms-progreso
                                     CoroutineScope(Dispatchers.IO).launch {
                                         try {

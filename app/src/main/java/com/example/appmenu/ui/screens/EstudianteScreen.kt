@@ -18,6 +18,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.filled.Assignment
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Hearing
 import androidx.compose.material.icons.filled.MenuBook
@@ -33,6 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.appmenu.model.ActividadesManager
 import com.example.appmenu.model.ConfiguracionEducativa
 import com.example.appmenu.ui.componentes.BannerSaludoEstudiante
 import com.example.appmenu.ui.componentes.TarjetaAsignaturaItem
@@ -58,6 +60,11 @@ fun EstudianteScreen(
     val mensajeError by estadoViewModel.mensajeError.collectAsState()
 
     var estadoActivado by rememberSaveable { mutableStateOf(false) }
+
+    val todosLosEjercicios by ActividadesManager.ejercicios.collectAsState()
+    val tareaLen2Completada = remember(todosLosEjercicios) {
+        todosLosEjercicios.find { it.id == "len_2" }?.completado == true
+    }
 
     LaunchedEffect(cargando, estadoGuardado) {
         if (!cargando) {
@@ -93,7 +100,7 @@ fun EstudianteScreen(
         )
 
         // ===================== TAREA DEL DIA =====================
-        // card destacada con la tarea pendiente de hoy
+        // card destacada con la tarea pendiente o completada de hoy
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -101,8 +108,10 @@ fun EstudianteScreen(
                     onAbrirTarea("len_2")
                 },
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0)),
-            border = BorderStroke(1.dp, Color(0xFFFFCC80)),
+            colors = CardDefaults.cardColors(
+                containerColor = if (tareaLen2Completada) Color(0xFFE8F5E9) else Color(0xFFFFF3E0)
+            ),
+            border = BorderStroke(1.dp, if (tareaLen2Completada) Color(0xFFA5D6A7) else Color(0xFFFFCC80)),
             elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
         ) {
             Row(
@@ -116,13 +125,13 @@ fun EstudianteScreen(
                     modifier = Modifier
                         .size(44.dp)
                         .clip(RoundedCornerShape(10.dp))
-                        .background(Color(0xFFFFCC80)),
+                        .background(if (tareaLen2Completada) Color(0xFFC8E6C9) else Color(0xFFFFCC80)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Assignment,
+                        imageVector = if (tareaLen2Completada) Icons.Default.CheckCircle else Icons.Default.Assignment,
                         contentDescription = null,
-                        tint = Color(0xFFE65100),
+                        tint = if (tareaLen2Completada) Color(0xFF2E7D32) else Color(0xFFE65100),
                         modifier = Modifier.size(26.dp)
                     )
                 }
@@ -130,10 +139,10 @@ fun EstudianteScreen(
                 // textos de la tarea
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "📌 Tarea pendiente de hoy",
+                        text = if (tareaLen2Completada) "🎉 ¡Tarea del día completada!" else "📌 Tarea pendiente de hoy",
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFFE65100)
+                        color = if (tareaLen2Completada) Color(0xFF2E7D32) else Color(0xFFE65100)
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
@@ -144,13 +153,13 @@ fun EstudianteScreen(
                     )
                 }
                 Spacer(modifier = Modifier.width(8.dp))
-                // badge "¡Vence hoy!"
+                // badge
                 Surface(
-                    color = Color(0xFFE65100),
+                    color = if (tareaLen2Completada) Color(0xFF2E7D32) else Color(0xFFE65100),
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
-                        text = "¡Vence hoy!",
+                        text = if (tareaLen2Completada) "¡10/10!" else "¡Vence hoy!",
                         color = Color.White,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
@@ -181,9 +190,19 @@ fun EstudianteScreen(
             )
         }
 
-        // grilla modular de 4 asignaturas
-        // el orden y colores se cambian directamente en moduloseducativos.kt
-        val listaAsignaturas = ConfiguracionEducativa.asignaturas
+        // grilla modular de 4 asignaturas con progreso dinamico y reactivo
+        val listaAsignaturas = remember(todosLosEjercicios) {
+            ConfiguracionEducativa.asignaturas.map { asig ->
+                val ejercicios = todosLosEjercicios.filter { it.materiaId.equals(asig.id, ignoreCase = true) }
+                val completadas = ejercicios.count { it.completado }
+                val total = ejercicios.size
+                val pct = if (total > 0) ((completadas.toFloat() / total.toFloat()) * 100).toInt() else 0
+                asig.copy(
+                    actividadesTexto = "$completadas de $total listas ($pct%)",
+                    progreso = if (total > 0) completadas.toFloat() / total.toFloat() else 0f
+                )
+            }
+        }
 
         // fila 1
         if (listaAsignaturas.size >= 2) {

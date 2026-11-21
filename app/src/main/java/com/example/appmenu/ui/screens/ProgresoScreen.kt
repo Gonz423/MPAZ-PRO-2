@@ -16,11 +16,13 @@ import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.LaunchedEffect
+import com.example.appmenu.model.ActividadesManager
 import com.example.appmenu.network.BackendClient
 import com.example.appmenu.network.ResultadoDto
 import androidx.compose.ui.Alignment
@@ -40,6 +42,9 @@ import com.example.appmenu.ui.theme.*
 fun ProgresoScreen(
     onAbrirCuaderno: () -> Unit = {}
 ) {
+    // observamos en tiempo real todos los ejercicios y actividades
+    val todosLosEjercicios by ActividadesManager.ejercicios.collectAsState()
+
     // estado sincronizado con el microservicio ms-progreso
     var resultadosBackend by remember { mutableStateOf<List<ResultadoDto>>(emptyList()) }
     var backendConectado by remember { mutableStateOf(false) }
@@ -50,11 +55,35 @@ fun ProgresoScreen(
             if (lista.isNotEmpty()) {
                 resultadosBackend = lista
                 backendConectado = true
+                // Sincronizar hacia ActividadesManager los resultados del backend
+                lista.forEach { res ->
+                    todosLosEjercicios.find {
+                        it.materiaId.equals(res.materiaId, ignoreCase = true) ||
+                        (it.codigoGuia.toLongOrNull() == res.ejercicioId)
+                    }?.let { ej ->
+                        if (!ej.completado) {
+                            ActividadesManager.marcarCompletado(ej.id, res.nota)
+                        }
+                    }
+                }
             }
         } catch (_: Exception) {
             backendConectado = false
         }
     }
+
+    // calculo dinamico reactivo del porcentaje de progreso por asignatura
+    fun calcularPorcentaje(materiaId: String): Int {
+        val ejercicios = todosLosEjercicios.filter { it.materiaId.equals(materiaId, ignoreCase = true) }
+        if (ejercicios.isEmpty()) return 0
+        val completados = ejercicios.count { it.completado }
+        return ((completados.toFloat() / ejercicios.size.toFloat()) * 100).toInt()
+    }
+
+    val pctLenguaje = remember(todosLosEjercicios) { calcularPorcentaje("lenguaje") }
+    val pctMatematica = remember(todosLosEjercicios) { calcularPorcentaje("matematica") }
+    val pctCiencias = remember(todosLosEjercicios) { calcularPorcentaje("ciencias") }
+    val pctHistoria = remember(todosLosEjercicios) { calcularPorcentaje("historia") }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -125,10 +154,10 @@ fun ProgresoScreen(
                     color = TextoOscuro
                 )
 
-                BarraAsignaturaProgreso("Lenguaje y Comunicación", 75, ColorLenguaje)
-                BarraAsignaturaProgreso("Matemática", 60, ColorMatematica)
-                BarraAsignaturaProgreso("Ciencias Naturales", 50, ColorCiencias)
-                BarraAsignaturaProgreso("Historia, Geografía y Cs. Sociales", 80, ColorHistoria)
+                BarraAsignaturaProgreso("Lenguaje y Comunicación", pctLenguaje, ColorLenguaje)
+                BarraAsignaturaProgreso("Matemática", pctMatematica, ColorMatematica)
+                BarraAsignaturaProgreso("Ciencias Naturales", pctCiencias, ColorCiencias)
+                BarraAsignaturaProgreso("Historia, Geografía y Cs. Sociales", pctHistoria, ColorHistoria)
             }
         }
 
@@ -168,20 +197,22 @@ fun ProgresoScreen(
                     }
                 }
 
-                if (resultadosBackend.isNotEmpty()) {
-                    resultadosBackend.takeLast(3).reversed().forEach { res ->
-                        val nombreTitulo = when (res.materiaId) {
-                            "matematica" -> "Matemática · Desafío"
-                            "ciencias"   -> "Ciencias · Órganos y Hábitats"
-                            "historia"   -> "Historia · Entorno y Planos"
-                            else         -> "Lenguaje · Lectura Guiada"
+                val ejerciciosCompletados = remember(todosLosEjercicios) {
+                    todosLosEjercicios.filter { it.completado }
+                }
+                if (ejerciciosCompletados.isNotEmpty()) {
+                    ejerciciosCompletados.takeLast(4).reversed().forEach { ej ->
+                        val nombreMateria = when (ej.materiaId) {
+                            "matematica" -> "Matemática"
+                            "ciencias"   -> "Ciencias"
+                            "historia"   -> "Historia"
+                            else         -> "Lenguaje"
                         }
-                        FilaUltimaActividad(nombreTitulo, "${res.nota}/10", completado = res.nota >= 6)
+                        val notaTexto = if (ej.nota > 0) "${ej.nota}/10" else "10/10"
+                        FilaUltimaActividad("${ej.titulo.take(28)} · $nombreMateria", notaTexto, completado = true)
                     }
                 } else {
-                    FilaUltimaActividad("Lectura y comprensión", "10/10", completado = true)
-                    FilaUltimaActividad("Números hasta 100", "8/10", completado = true)
-                    FilaUltimaActividad("Los seres vivos", "6/10", completado = false)
+                    FilaUltimaActividad("Sin actividades completadas aún", "0/10", completado = false)
                 }
             }
         }

@@ -34,6 +34,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.appmenu.model.ActividadesManager
 import com.example.appmenu.model.ConfiguracionEducativa
 import com.example.appmenu.model.ProgresoAsignatura
 import com.example.appmenu.ui.componentes.FilaProgresoAsignatura
@@ -56,13 +57,24 @@ fun DocenteScreen(
     // estado del curso desplegado para ver su progreso por asignatura
     var cursoDesplegado by remember { mutableStateOf<String?>("A") }
 
-    // datos pedagogicos por curso
-    val progresoCursoA = listOf(
-        ProgresoAsignatura(asignatura = "Lenguaje y Comunicación", porcentaje = 78, color = ColorLenguaje),
-        ProgresoAsignatura(asignatura = "Matemática", porcentaje = 72, color = ColorMatematica),
-        ProgresoAsignatura(asignatura = "Ciencias Naturales", porcentaje = 65, color = ColorCiencias),
-        ProgresoAsignatura(asignatura = "Historia y Geografía", porcentaje = 84, color = ColorHistoria)
-    )
+    // observamos las actividades de los alumnos
+    val todosLosEjercicios by ActividadesManager.ejercicios.collectAsState()
+    fun calcularPorcentajeMateria(materiaId: String, baseFallback: Int): Int {
+        val ejercicios = todosLosEjercicios.filter { it.materiaId.equals(materiaId, ignoreCase = true) }
+        if (ejercicios.isEmpty()) return baseFallback
+        val completados = ejercicios.count { it.completado }
+        return ((completados.toFloat() / ejercicios.size.toFloat()) * 100).toInt()
+    }
+
+    // datos pedagogicos por curso reactivos a las actividades completadas
+    val progresoCursoA = remember(todosLosEjercicios) {
+        listOf(
+            ProgresoAsignatura(asignatura = "Lenguaje y Comunicación", porcentaje = calcularPorcentajeMateria("lenguaje", 78), color = ColorLenguaje),
+            ProgresoAsignatura(asignatura = "Matemática", porcentaje = calcularPorcentajeMateria("matematica", 72), color = ColorMatematica),
+            ProgresoAsignatura(asignatura = "Ciencias Naturales", porcentaje = calcularPorcentajeMateria("ciencias", 65), color = ColorCiencias),
+            ProgresoAsignatura(asignatura = "Historia y Geografía", porcentaje = calcularPorcentajeMateria("historia", 84), color = ColorHistoria)
+        )
+    }
 
     val progresoCursoB = listOf(
         ProgresoAsignatura(asignatura = "Lenguaje y Comunicación", porcentaje = 68, color = ColorLenguaje),

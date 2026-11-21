@@ -282,13 +282,13 @@ object ActividadesManager {
     // marcar como completado o pendiente
     fun alternarCompletado(ejercicioId: String) {
         _ejercicios.value = _ejercicios.value.map { ej ->
-            if (ej.id == ejercicioId) ej.copy(completado = !ej.completado) else ej
+            if (ej.id == ejercicioId) ej.copy(completado = !ej.completado, nota = if (!ej.completado) 10 else 0) else ej
         }
     }
 
-    fun marcarCompletado(ejercicioId: String) {
+    fun marcarCompletado(ejercicioId: String, nota: Int = 10) {
         _ejercicios.value = _ejercicios.value.map { ej ->
-            if (ej.id == ejercicioId) ej.copy(completado = true) else ej
+            if (ej.id == ejercicioId) ej.copy(completado = true, nota = nota, intentos = ej.intentos + 1) else ej
         }
     }
 
