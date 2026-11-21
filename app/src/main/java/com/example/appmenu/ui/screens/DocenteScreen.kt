@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.PostAdd
 import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.Science
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -47,7 +48,8 @@ fun DocenteScreen(
     onNavegarAsignarTarea: () -> Unit = {},
     onNavegarNotas: () -> Unit = {},
     onNavegarInformeEstudiante: () -> Unit = {},
-    onSeleccionarAsignatura: (String) -> Unit = {}
+    onSeleccionarAsignatura: (String) -> Unit = {},
+    onNavegarTrivia: () -> Unit = {}
 ) {
     val context = LocalContext.current
 
@@ -200,6 +202,48 @@ fun DocenteScreen(
                         )
                     }
                     Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color(0xFF2E7D32))
+                }
+            }
+
+            // 6. tarjeta destacada para trivia de ciencias (API externa Retrofit)
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onNavegarTrivia() },
+                shape = RoundedCornerShape(14.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFE0F2F1)),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF80CBC4))
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(42.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF00897B)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Default.Science, contentDescription = null, tint = Color.White)
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "🔬 Trivia de Ciencias (API Externa)",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF00695C)
+                        )
+                        Text(
+                            text = "Preguntas interactivas desde Open Trivia Database vía Retrofit",
+                            fontSize = 12.sp,
+                            color = GrisTexto
+                        )
+                    }
+                    Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color(0xFF00897B))
                 }
             }
         }

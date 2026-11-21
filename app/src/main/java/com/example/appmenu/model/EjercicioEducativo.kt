@@ -28,7 +28,11 @@ data class EjercicioEducativo(
     // contenido pedagogico interactivo para probar
     val pregunta: String = "¿Cuál es la respuesta correcta?",
     val opciones: List<String> = listOf("Opción 1", "Opción 2", "Opción 3"),
-    val respuestaCorrectaIndex: Int = 0
+    val respuestaCorrectaIndex: Int = 0,
+    // calificacion numerica: 0 = no realizado, 1-10 = nota obtenida
+    val nota: Int = 0,
+    // cantidad de intentos realizados por el estudiante
+    val intentos: Int = 0
 )
 
 // gestor centralizado de unidades y ejercicios single source of truth

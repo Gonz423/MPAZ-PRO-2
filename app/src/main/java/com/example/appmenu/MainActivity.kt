@@ -46,6 +46,12 @@ sealed class Ruta(val id: String) {
     object EstudiantePerfil    : Ruta("est_perfil")
     object EstudianteCuaderno  : Ruta("est_cuaderno")
 
+    // pantalla de feedback animado al completar actividad
+    object FeedbackActividad   : Ruta("feedback_actividad")
+
+    // pantalla de trivia de ciencias (API externa)
+    object TriviaRuta          : Ruta("trivia")
+
     // flujo docente mockup screens 12, 13
     object DocentePanel        : Ruta("doc_panel")
     object DocenteGestion      : Ruta("doc_gestion")
@@ -62,6 +68,11 @@ class MainActivity : FragmentActivity() {
         enableEdgeToEdge()
         setContent {
             AppMenuTheme {
+
+                // variables de estado para feedback animado (mejora 1)
+                var mostrarFeedback by remember { mutableStateOf(false) }
+                var aciertosResultado by remember { mutableStateOf(2) }
+                var totalResultado by remember { mutableStateOf(3) }
 
                 // ruta y estados de navegacion inicia con portada 3 segundos
                 var ruta by remember { mutableStateOf<Ruta>(Ruta.Splash) }
@@ -108,6 +119,7 @@ class MainActivity : FragmentActivity() {
                 // control del boton atras del sistema no salir del perfil
                 BackHandler(enabled = ruta != Ruta.Selector && ruta != Ruta.Splash) {
                     when {
+                        mostrarFeedback -> mostrarFeedback = false
                         verActividadInteractiva -> verActividadInteractiva = false
                         verLeccion -> verLeccion = false
                         materiaSeleccionada != null -> materiaSeleccionada = null
@@ -116,6 +128,19 @@ class MainActivity : FragmentActivity() {
                         // si ya esta en la vista principal de su perfil, no hace nada para mantenerse en el perfil
                     }
                 }
+                // mejora 1: pantalla de feedback animado (antes del bloque de actividad interactiva)
+                if (mostrarFeedback) {
+                    FeedbackActividadScreen(
+                        aciertos = aciertosResultado,
+                        total = totalResultado,
+                        tituloActividad = "Actividad completada",
+                        onContinuar = {
+                            mostrarFeedback = false
+                        }
+                    )
+                    return@AppMenuTheme
+                }
+
                 if (verActividadInteractiva) {
                     ActividadInteractivaScreen(
                         ejercicioId = actividadSeleccionadaId,
@@ -123,6 +148,10 @@ class MainActivity : FragmentActivity() {
                         onFinalizarActividad = {
                             verActividadInteractiva = false
                             verLeccion = false
+                            // mostrar feedback al finalizar la actividad
+                            aciertosResultado = 2
+                            totalResultado = 3
+                            mostrarFeedback = true
                         }
                     )
                     return@AppMenuTheme
@@ -183,6 +212,7 @@ class MainActivity : FragmentActivity() {
                     Ruta.DocenteCuaderno -> Pair(Color(0xFF2E7D32), "Cuaderno de Tareas y Observaciones")
                     Ruta.DocentePerfil -> Pair(AzulBarraSuperior, "Perfil Docente")
 
+                    Ruta.TriviaRuta -> Pair(Color(0xFF00897B), "🔬 Trivia de Ciencias Naturales")
                     Ruta.EstudianteInicio -> Pair(AzulBarraSuperior, "MPAZ PRO 2.º · Estudiante")
                     Ruta.EstudianteProgreso -> Pair(AzulBarraSuperior, "Progreso Académico")
                     Ruta.EstudianteCuaderno -> Pair(Color(0xFF2E7D32), "Mi Cuaderno de Tareas")
@@ -310,7 +340,8 @@ class MainActivity : FragmentActivity() {
                                     estudianteSeleccionadoInforme = null
                                     ruta = Ruta.DocenteInforme
                                 },
-                                onSeleccionarAsignatura    = { idMateria -> materiaSeleccionada = idMateria }
+                                onSeleccionarAsignatura    = { idMateria -> materiaSeleccionada = idMateria },
+                                onNavegarTrivia            = { ruta = Ruta.TriviaRuta }
                             )
                             Ruta.DocenteGestion -> GestionarContenidosScreen(
                                 onVolver = { ruta = Ruta.DocentePanel },
@@ -336,6 +367,9 @@ class MainActivity : FragmentActivity() {
                                 esDocente = true,
                                 onCerrarSesion = { ruta = Ruta.Selector }
                             )
+
+                            // mejora 4: trivia de ciencias naturales
+                            Ruta.TriviaRuta -> TriviaScreen()
 
                             else -> SelectorPerfilScreen(
                                 onSeleccionarEstudiante = { ruta = Ruta.EstudianteInicio },

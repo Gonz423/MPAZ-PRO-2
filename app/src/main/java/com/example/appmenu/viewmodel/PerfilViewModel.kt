@@ -12,7 +12,6 @@ class PerfilViewModel : ViewModel() {
     private val _imagenUri = MutableStateFlow<Uri?>(null)
     val imagenUri: StateFlow<Uri?> = _imagenUri.asStateFlow()
 
-    // guardamos la uri temporal aqui en el viewmodel para que no se pierda
     // cuando la app de camara externa tome el control del dispositivo
     var uriPendienteCamara: Uri? = null
 

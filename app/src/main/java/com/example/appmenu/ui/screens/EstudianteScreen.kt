@@ -8,11 +8,16 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
+import androidx.compose.ui.draw.clip
+import androidx.compose.material.icons.filled.Assignment
 import androidx.compose.material.icons.filled.Hearing
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material3.*
@@ -82,6 +87,75 @@ fun EstudianteScreen(
             nombre = "Martina",
             mensaje = "¿Qué aprenderemos hoy?"
         )
+
+        // ===================== TAREA DEL DIA =====================
+        // card destacada con la tarea pendiente de hoy
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable {
+                    Toast.makeText(context, "Abriendo tarea...", Toast.LENGTH_SHORT).show()
+                },
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0)),
+            border = BorderStroke(1.dp, Color(0xFFFFCC80)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(14.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // icono de tarea
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Color(0xFFFFCC80)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Assignment,
+                        contentDescription = null,
+                        tint = Color(0xFFE65100),
+                        modifier = Modifier.size(26.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                // textos de la tarea
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "📌 Tarea pendiente de hoy",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFE65100)
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "Juego de Rimas y Sonidos de Palabras · Lenguaje",
+                        fontSize = 13.sp,
+                        color = TextoOscuro,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                // badge "¡Vence hoy!"
+                Surface(
+                    color = Color(0xFFE65100),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = "¡Vence hoy!",
+                        color = Color.White,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 4.dp)
+                    )
+                }
+            }
+        }
+        // ===================== FIN TAREA DEL DIA =================
 
         // titulo de asignaturas y estado
         Row(

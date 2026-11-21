@@ -182,8 +182,9 @@ fun FilaUltimaActividad(
             Spacer(modifier = Modifier.width(8.dp))
             Text(titulo, fontSize = 14.sp, color = TextoOscuro)
         }
+        // mostrar "Nota: X/10" como prefijo del puntaje
         Text(
-            text = puntaje,
+            text = "Nota: $puntaje",
             fontSize = 13.sp,
             fontWeight = FontWeight.Bold,
             color = if (completado) Color(0xFF2E7D32) else GrisTexto
