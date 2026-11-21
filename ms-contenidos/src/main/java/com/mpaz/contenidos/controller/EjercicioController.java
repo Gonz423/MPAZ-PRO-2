@@ -17,7 +17,7 @@ import java.util.List;
  * PUT    /api/ejercicios/{id}           -> actualizar
  * DELETE /api/ejercicios/{id}           -> eliminar
  */
-@RestController @RequestMapping("/api/ejercicios") @RequiredArgsConstructor
+@RestController @RequestMapping("/api/ejercicios") @CrossOrigin(origins = "*") @RequiredArgsConstructor
 public class EjercicioController {
     private final EjercicioService service;
 

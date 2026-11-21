@@ -15,7 +15,7 @@ import java.util.List;
  * PUT    /api/unidades/{id}         -> actualizar
  * DELETE /api/unidades/{id}         -> eliminar
  */
-@RestController @RequestMapping("/api/unidades") @RequiredArgsConstructor
+@RestController @RequestMapping("/api/unidades") @CrossOrigin(origins = "*") @RequiredArgsConstructor
 public class UnidadController {
     private final UnidadService service;
 

@@ -15,7 +15,7 @@ import java.util.List;
  * PUT    /api/observaciones/{id}             -> actualizar
  * DELETE /api/observaciones/{id}            -> eliminar
  */
-@RestController @RequestMapping("/api/observaciones") @RequiredArgsConstructor
+@RestController @RequestMapping("/api/observaciones") @CrossOrigin(origins = "*") @RequiredArgsConstructor
 public class ObservacionController {
     private final ObservacionService service;
 

@@ -16,7 +16,7 @@ import java.util.List;
  * PUT    /api/usuarios/{id}         -> actualizar
  * DELETE /api/usuarios/{id}         -> eliminar
  */
-@RestController @RequestMapping("/api/usuarios") @RequiredArgsConstructor
+@RestController @RequestMapping("/api/usuarios") @CrossOrigin(origins = "*") @RequiredArgsConstructor
 public class UsuarioController {
     private final UsuarioService service;
 

@@ -29,7 +29,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.appmenu.model.ActividadesManager
+import com.example.appmenu.network.BackendClient
+import com.example.appmenu.network.ResultadoDto
 import com.example.appmenu.ui.theme.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 // PANTALLA: ACTIVIDAD DIDACTICA INTERACTIVA Y FEEDBACK
 
@@ -228,7 +233,26 @@ fun ActividadInteractivaScreen(
                             if (opcionSeleccionada == indiceCorrecto) {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 mensajeError = null
-                                ejercicio?.let { ActividadesManager.marcarCompletado(it.id) }
+                                ejercicio?.let { ej ->
+                                    ActividadesManager.marcarCompletado(ej.id)
+                                    // Sincronizacion HTTP con microservicio ms-progreso
+                                    CoroutineScope(Dispatchers.IO).launch {
+                                        try {
+                                            BackendClient.progresoApi.registrarResultado(
+                                                ResultadoDto(
+                                                    estudianteId = 1L,
+                                                    ejercicioId = (ej.codigoGuia.toLongOrNull() ?: ej.id.hashCode().toLong()).coerceAtLeast(1L),
+                                                    nota = 10,
+                                                    aciertos = 1,
+                                                    totalPreguntas = 1,
+                                                    materiaId = ej.materiaId
+                                                )
+                                            )
+                                        } catch (_: Exception) {
+                                            // Fallback local seguro si el microservicio esta apagado
+                                        }
+                                    }
+                                }
                                 mostrarExito = true
                             } else {
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)

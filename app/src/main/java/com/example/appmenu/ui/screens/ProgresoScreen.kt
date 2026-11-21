@@ -17,6 +17,12 @@ import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
+import com.example.appmenu.network.BackendClient
+import com.example.appmenu.network.ResultadoDto
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,6 +40,21 @@ import com.example.appmenu.ui.theme.*
 fun ProgresoScreen(
     onAbrirCuaderno: () -> Unit = {}
 ) {
+    // estado sincronizado con el microservicio ms-progreso
+    var resultadosBackend by remember { mutableStateOf<List<ResultadoDto>>(emptyList()) }
+    var backendConectado by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        try {
+            val lista = BackendClient.progresoApi.listarResultados(estudianteId = 1L)
+            if (lista.isNotEmpty()) {
+                resultadosBackend = lista
+                backendConectado = true
+            }
+        } catch (_: Exception) {
+            backendConectado = false
+        }
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -122,16 +143,46 @@ fun ProgresoScreen(
                 modifier = Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Text(
-                    text = "Últimas actividades",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TextoOscuro
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Últimas actividades",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextoOscuro
+                    )
+                    Surface(
+                        color = if (backendConectado) Color(0xFFE8F5E9) else Color(0xFFF1F5F9),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            text = if (backendConectado) "● ms-progreso conectado" else "○ Modo local",
+                            color = if (backendConectado) Color(0xFF2E7D32) else GrisTexto,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                        )
+                    }
+                }
 
-                FilaUltimaActividad("Lectura y comprensión", "10/10", completado = true)
-                FilaUltimaActividad("Números hasta 100", "8/10", completado = true)
-                FilaUltimaActividad("Los seres vivos", "6/10", completado = false)
+                if (resultadosBackend.isNotEmpty()) {
+                    resultadosBackend.takeLast(3).reversed().forEach { res ->
+                        val nombreTitulo = when (res.materiaId) {
+                            "matematica" -> "Matemática · Desafío"
+                            "ciencias"   -> "Ciencias · Órganos y Hábitats"
+                            "historia"   -> "Historia · Entorno y Planos"
+                            else         -> "Lenguaje · Lectura Guiada"
+                        }
+                        FilaUltimaActividad(nombreTitulo, "${res.nota}/10", completado = res.nota >= 6)
+                    }
+                } else {
+                    FilaUltimaActividad("Lectura y comprensión", "10/10", completado = true)
+                    FilaUltimaActividad("Números hasta 100", "8/10", completado = true)
+                    FilaUltimaActividad("Los seres vivos", "6/10", completado = false)
+                }
             }
         }
 

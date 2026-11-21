@@ -1,11 +1,15 @@
 package com.example.appmenu.viewmodel
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.appmenu.model.FormularioModel
+import com.example.appmenu.model.ActividadesManager
+import com.example.appmenu.network.BackendClient
+import com.example.appmenu.network.EjercicioDto
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import com.example.appmenu.model.ActividadesManager
+import kotlinx.coroutines.launch
 
 data class FormularioErrores(
     val nombre: String? = null,
@@ -154,6 +158,29 @@ class FormularioViewModel : ViewModel() {
             esTarea = datos.esTarea,
             fechaEntrega = datos.fecha
         )
+
+        // Sincronizacion HTTP asincrona con microservicio ms-contenidos
+        viewModelScope.launch {
+            try {
+                BackendClient.contenidosApi.crearEjercicio(
+                    EjercicioDto(
+                        materiaId = materiaId,
+                        unidadId = 1L,
+                        titulo = (if (datos.esTarea && !datos.nombre.startsWith("Tarea:", ignoreCase = true)) "Tarea: " else "") + datos.nombre,
+                        objetivoAprendizaje = datos.descripcion,
+                        codigoGuia = datos.cantidad,
+                        pregunta = "¿Cuál es la respuesta correcta?",
+                        opciones = "[\"Opción 1\", \"Opción 2\", \"Opción 3\"]",
+                        respuestaCorrectaIndex = 0,
+                        disponible = datos.activo,
+                        esTarea = datos.esTarea,
+                        fechaEntrega = datos.fecha
+                    )
+                )
+            } catch (_: Exception) {
+                // Modo offline seguro
+            }
+        }
 
         // reiniciar formulario manteniendo la ultima categoria elegida
         _formulario.value = FormularioModel(categoria = datos.categoria, esTarea = datos.esTarea)

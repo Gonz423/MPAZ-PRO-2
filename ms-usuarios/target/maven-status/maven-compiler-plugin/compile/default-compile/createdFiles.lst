@@ -1,0 +1,12 @@
+com\mpaz\usuarios\dto\LoginResponse.class
+com\mpaz\usuarios\security\JwtUtil.class
+com\mpaz\usuarios\model\Usuario.class
+com\mpaz\usuarios\model\Usuario$UsuarioBuilder.class
+com\mpaz\usuarios\controller\UsuarioController.class
+com\mpaz\usuarios\dto\RegistroRequest.class
+com\mpaz\usuarios\UsuariosApplication.class
+com\mpaz\usuarios\service\UsuarioService.class
+com\mpaz\usuarios\controller\AuthController.class
+com\mpaz\usuarios\repository\UsuarioRepository.class
+com\mpaz\usuarios\config\SecurityConfig.class
+com\mpaz\usuarios\dto\LoginRequest.class

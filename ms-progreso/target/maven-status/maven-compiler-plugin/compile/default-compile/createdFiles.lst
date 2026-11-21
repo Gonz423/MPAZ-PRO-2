@@ -1,0 +1,13 @@
+com\mpaz\progreso\repository\ObservacionRepository.class
+com\mpaz\progreso\service\ResultadoService.class
+com\mpaz\progreso\dto\ResumenProgresoDto.class
+com\mpaz\progreso\model\Resultado.class
+com\mpaz\progreso\model\Observacion.class
+com\mpaz\progreso\service\ObservacionService.class
+com\mpaz\progreso\repository\ResultadoRepository.class
+com\mpaz\progreso\config\SecurityConfig.class
+com\mpaz\progreso\model\Resultado$ResultadoBuilder.class
+com\mpaz\progreso\ProgresoApplication.class
+com\mpaz\progreso\model\Observacion$ObservacionBuilder.class
+com\mpaz\progreso\controller\ResultadoController.class
+com\mpaz\progreso\controller\ObservacionController.class

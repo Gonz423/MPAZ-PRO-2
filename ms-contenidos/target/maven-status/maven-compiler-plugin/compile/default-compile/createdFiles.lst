@@ -1,0 +1,12 @@
+com\mpaz\contenidos\model\Unidad.class
+com\mpaz\contenidos\repository\EjercicioRepository.class
+com\mpaz\contenidos\controller\UnidadController.class
+com\mpaz\contenidos\repository\UnidadRepository.class
+com\mpaz\contenidos\service\EjercicioService.class
+com\mpaz\contenidos\ContenidosApplication.class
+com\mpaz\contenidos\config\SecurityConfig.class
+com\mpaz\contenidos\controller\EjercicioController.class
+com\mpaz\contenidos\model\Ejercicio.class
+com\mpaz\contenidos\service\UnidadService.class
+com\mpaz\contenidos\model\Unidad$UnidadBuilder.class
+com\mpaz\contenidos\model\Ejercicio$EjercicioBuilder.class

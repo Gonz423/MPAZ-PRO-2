@@ -16,7 +16,7 @@ import java.util.List;
  * DELETE /api/resultados/{id}                                -> eliminar
  * GET    /api/resultados/progreso/{estudianteId}/{materiaId} -> resumen por asignatura
  */
-@RestController @RequestMapping("/api/resultados") @RequiredArgsConstructor
+@RestController @RequestMapping("/api/resultados") @CrossOrigin(origins = "*") @RequiredArgsConstructor
 public class ResultadoController {
     private final ResultadoService service;
 

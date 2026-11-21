@@ -3,6 +3,8 @@ package com.example.appmenu.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.appmenu.network.BackendClient
+import com.example.appmenu.network.ObservacionDto
 import com.example.appmenu.room.AppDatabase
 import com.example.appmenu.room.Note
 import com.example.appmenu.room.NoteRepository
@@ -88,6 +90,17 @@ class NotasViewModel(application: Application) : AndroidViewModel(application) {
 
         viewModelScope.launch {
             repository.save(titulo.trim(), contenido.trim())
+            try {
+                BackendClient.progresoApi.crearObservacion(
+                    ObservacionDto(
+                        docenteId = 1L,
+                        estudianteId = 1L,
+                        contenido = "${titulo.trim()}: ${contenido.trim()}"
+                    )
+                )
+            } catch (_: Exception) {
+                // Modo offline seguro
+            }
             limpiarErrores()
             onResultado(true, "Registro guardado correctamente en la base de datos.")
         }

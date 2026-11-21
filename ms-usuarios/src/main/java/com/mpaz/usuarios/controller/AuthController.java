@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
  * POST /api/auth/login    -> obtener JWT
  * POST /api/auth/registro -> registrar nuevo usuario
  */
-@RestController @RequestMapping("/api/auth") @RequiredArgsConstructor
+@RestController @RequestMapping("/api/auth") @CrossOrigin(origins = "*") @RequiredArgsConstructor
 public class AuthController {
     private final UsuarioService service;
 
