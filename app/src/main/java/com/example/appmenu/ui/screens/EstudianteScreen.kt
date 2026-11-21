@@ -18,8 +18,10 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.filled.Assignment
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Hearing
 import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.filled.Science
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -43,7 +45,9 @@ import kotlinx.coroutines.delay
 @Composable
 fun EstudianteScreen(
     estadoViewModel: EstadoViewModel = viewModel(),
-    onSeleccionarAsignatura: (String) -> Unit = {}
+    onSeleccionarAsignatura: (String) -> Unit = {},
+    onAbrirTarea: (String) -> Unit = {},
+    onNavegarTrivia: () -> Unit = {}
 ) {
     val context = LocalContext.current
 
@@ -94,7 +98,7 @@ fun EstudianteScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable {
-                    Toast.makeText(context, "Abriendo tarea...", Toast.LENGTH_SHORT).show()
+                    onAbrirTarea("len_2")
                 },
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0)),
@@ -231,6 +235,59 @@ fun EstudianteScreen(
             }
         }
 
+        // ===================== DESAFÍO CIENTÍFICO =====================
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onNavegarTrivia() },
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFE0F2F1)),
+            border = BorderStroke(1.dp, Color(0xFF80CBC4)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(14.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Color(0xFF00897B)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Science,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "🔬 Desafío Científico · Curiosidades",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF00695C)
+                    )
+                    Text(
+                        text = "¿Cuánto sabes de la naturaleza? ¡Responde la trivia diaria!",
+                        fontSize = 12.sp,
+                        color = GrisTexto
+                    )
+                }
+                Icon(
+                    imageVector = Icons.Default.ChevronRight,
+                    contentDescription = null,
+                    tint = Color(0xFF00897B)
+                )
+            }
+        }
+        // ===================== FIN DESAFÍO CIENTÍFICO =================
+
         // control apoyo didactico
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -254,7 +311,7 @@ fun EstudianteScreen(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Modo de Lectura y Audio (DataStore)",
+                        text = "Lectura Guiada y Apoyo con Audio",
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
                         color = TextoOscuro

@@ -212,7 +212,7 @@ class MainActivity : FragmentActivity() {
                     Ruta.DocenteCuaderno -> Pair(Color(0xFF2E7D32), "Cuaderno de Tareas y Observaciones")
                     Ruta.DocentePerfil -> Pair(AzulBarraSuperior, "Perfil Docente")
 
-                    Ruta.TriviaRuta -> Pair(Color(0xFF00897B), "🔬 Trivia de Ciencias Naturales")
+                    Ruta.TriviaRuta -> Pair(Color(0xFF00897B), "Desafío de Ciencias · Trivia")
                     Ruta.EstudianteInicio -> Pair(AzulBarraSuperior, "MPAZ PRO 2.º · Estudiante")
                     Ruta.EstudianteProgreso -> Pair(AzulBarraSuperior, "Progreso Académico")
                     Ruta.EstudianteCuaderno -> Pair(Color(0xFF2E7D32), "Mi Cuaderno de Tareas")
@@ -240,6 +240,9 @@ class MainActivity : FragmentActivity() {
                                         Ruta.DocenteInforme -> {
                                             if (estudianteSeleccionadoInforme != null) ruta = Ruta.DocenteGestion
                                             else ruta = Ruta.DocentePanel
+                                        }
+                                        Ruta.TriviaRuta -> {
+                                            ruta = if (esEstudiante) Ruta.EstudianteInicio else Ruta.DocentePanel
                                         }
                                         else -> ruta = Ruta.DocentePanel
                                     }
@@ -320,7 +323,12 @@ class MainActivity : FragmentActivity() {
                         when (ruta) {
                             // flujo estudiante
                             Ruta.EstudianteInicio -> EstudianteScreen(
-                                onSeleccionarAsignatura = { idMateria -> materiaSeleccionada = idMateria }
+                                onSeleccionarAsignatura = { idMateria -> materiaSeleccionada = idMateria },
+                                onAbrirTarea = { idEjercicio ->
+                                    actividadSeleccionadaId = idEjercicio
+                                    verActividadInteractiva = true
+                                },
+                                onNavegarTrivia = { ruta = Ruta.TriviaRuta }
                             )
                             Ruta.EstudianteProgreso -> ProgresoScreen(
                                 onAbrirCuaderno = { ruta = Ruta.EstudianteCuaderno }

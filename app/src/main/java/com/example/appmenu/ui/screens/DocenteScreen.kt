@@ -232,13 +232,13 @@ fun DocenteScreen(
                     Spacer(modifier = Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "🔬 Trivia de Ciencias (API Externa)",
+                            text = "🔬 Desafío Científico · Curiosidades",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF00695C)
                         )
                         Text(
-                            text = "Preguntas interactivas desde Open Trivia Database vía Retrofit",
+                            text = "Preguntas interactivas y curiosidades sobre la naturaleza y el entorno",
                             fontSize = 12.sp,
                             color = GrisTexto
                         )

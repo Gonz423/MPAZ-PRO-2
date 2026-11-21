@@ -155,14 +155,14 @@ fun ProgresoScreen(
                         color = TextoOscuro
                     )
                     Surface(
-                        color = if (backendConectado) Color(0xFFE8F5E9) else Color(0xFFF1F5F9),
+                        color = Color(0xFFE8F5E9),
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Text(
-                            text = if (backendConectado) "● ms-progreso conectado" else "○ Modo local",
-                            color = if (backendConectado) Color(0xFF2E7D32) else GrisTexto,
+                            text = "⭐ Cuaderno al día",
+                            color = Color(0xFF2E7D32),
                             fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.SemiBold,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                         )
                     }

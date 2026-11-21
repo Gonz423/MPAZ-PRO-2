@@ -237,7 +237,7 @@ fun PerfilScreen(
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
                             Text("Audio de instrucciones", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = TextoOscuro)
-                            Text("Soporte sonoro (DataStore)", fontSize = 11.sp, color = GrisTexto)
+                            Text("Lectura en voz alta para apoyo didáctico", fontSize = 11.sp, color = GrisTexto)
                         }
                     }
                     Switch(

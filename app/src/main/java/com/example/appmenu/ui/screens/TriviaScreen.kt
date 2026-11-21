@@ -258,7 +258,7 @@ private fun TarjetaPreguntaTrivia(
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
-                text = if (esCorrecto) "✅ ¡Correcto! Muy bien." else "❌ Incorrecto. La correcta era: ${Html.fromHtml(pregunta.correctAnswer, Html.FROM_HTML_MODE_LEGACY)}",
+                text = if (esCorrecto) "✅ ¡Excelente! Respuesta correcta." else "❌ ¡Casi! La respuesta correcta era: ${decodificarHtml(pregunta.correctAnswer)}",
                 color = if (esCorrecto) Color(0xFF2E7D32) else Color(0xFFC62828),
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Medium,
