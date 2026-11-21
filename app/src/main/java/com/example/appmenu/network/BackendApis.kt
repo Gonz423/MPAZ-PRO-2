@@ -36,9 +36,3 @@ interface ContenidosApiService {
     @DELETE("api/ejercicios/{id}")
     suspend fun eliminarEjercicio(@Path("id") id: Long)
 }
-
-// microservicio ms-usuarios (puerto 8081)
-interface UsuariosApiService {
-    @POST("api/auth/login")
-    suspend fun login(@Body req: LoginRequestDto): LoginResponseDto
-}

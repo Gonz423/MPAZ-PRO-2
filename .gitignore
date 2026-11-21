@@ -13,3 +13,7 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+**/target/
+target/
+*.class

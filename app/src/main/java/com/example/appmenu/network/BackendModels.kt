@@ -46,14 +46,3 @@ data class UnidadDto(
     @SerializedName("titulo")              val titulo: String = "",
     @SerializedName("objetivoAprendizaje") val objetivoAprendizaje: String? = null
 )
-
-data class LoginRequestDto(
-    @SerializedName("correo")   val correo: String,
-    @SerializedName("password") val password: String
-)
-
-data class LoginResponseDto(
-    @SerializedName("token")  val token: String,
-    @SerializedName("rol")    val rol: String,
-    @SerializedName("nombre") val nombre: String
-)

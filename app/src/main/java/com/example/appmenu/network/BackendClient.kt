@@ -37,14 +37,4 @@ object BackendClient {
             .build()
             .create(ContenidosApiService::class.java)
     }
-
-    // ms-usuarios (puerto 8081)
-    val usuariosApi: UsuariosApiService by lazy {
-        Retrofit.Builder()
-            .baseUrl(BackendConfig.URL_USUARIOS)
-            .client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-            .create(UsuariosApiService::class.java)
-    }
 }
