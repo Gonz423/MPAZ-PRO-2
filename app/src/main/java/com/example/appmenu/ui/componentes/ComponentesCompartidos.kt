@@ -1,6 +1,7 @@
 package com.example.appmenu.ui.componentes
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -20,6 +21,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.appmenu.model.EjercicioEducativo
@@ -160,35 +162,90 @@ fun BarraAsignaturaProgreso(
     }
 }
 
-// fila de ultima actividad con estado completado/pendiente
+// fila de ultima actividad con estado completado/pendiente estilizada y modular
 @Composable
 fun FilaUltimaActividad(
     titulo: String,
-    puntaje: String,
-    completado: Boolean
+    asignatura: String = "Lenguaje y Comunicación",
+    colorAsignatura: Color = ColorLenguaje,
+    nota: String = "10/10",
+    completado: Boolean = true
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        color = Color(0xFFF8FAFC),
+        border = BorderStroke(1.dp, Color(0xFFEDF2F7))
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                imageVector = if (completado) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
-                contentDescription = null,
-                tint = if (completado) Color(0xFF2E7D32) else GrisTexto,
-                modifier = Modifier.size(18.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(titulo, fontSize = 14.sp, color = TextoOscuro)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            // Icono de estado
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .background(if (completado) Color(0xFFE8F5E9) else Color(0xFFF1F5F9)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = if (completado) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
+                    contentDescription = null,
+                    tint = if (completado) Color(0xFF2E7D32) else GrisTexto,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(10.dp))
+
+            // Textos: Titulo de actividad y asignatura
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = titulo,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = TextoOscuro,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(6.dp)
+                            .clip(CircleShape)
+                            .background(colorAsignatura)
+                    )
+                    Spacer(modifier = Modifier.width(5.dp))
+                    Text(
+                        text = asignatura,
+                        fontSize = 11.sp,
+                        color = GrisTexto,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.width(10.dp))
+
+            // Badge con la nota obtenida
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = if (completado) colorAsignatura.copy(alpha = 0.12f) else Color(0xFFF1F5F9)
+            ) {
+                Text(
+                    text = if (completado) "Nota: $nota" else "Pendiente",
+                    color = if (completado) colorAsignatura else GrisTexto,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                )
+            }
         }
-        // mostrar "Nota: X/10" como prefijo del puntaje
-        Text(
-            text = "Nota: $puntaje",
-            fontSize = 13.sp,
-            fontWeight = FontWeight.Bold,
-            color = if (completado) Color(0xFF2E7D32) else GrisTexto
-        )
     }
 }
 

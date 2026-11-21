@@ -202,17 +202,29 @@ fun ProgresoScreen(
                 }
                 if (ejerciciosCompletados.isNotEmpty()) {
                     ejerciciosCompletados.takeLast(4).reversed().forEach { ej ->
-                        val nombreMateria = when (ej.materiaId) {
-                            "matematica" -> "Matemática"
-                            "ciencias"   -> "Ciencias"
-                            "historia"   -> "Historia"
-                            else         -> "Lenguaje"
+                        val (nombreMateria, colorMateria) = when (ej.materiaId) {
+                            "matematica" -> Pair("Matemática", ColorMatematica)
+                            "ciencias"   -> Pair("Ciencias Naturales", ColorCiencias)
+                            "historia"   -> Pair("Historia y Geografía", ColorHistoria)
+                            else         -> Pair("Lenguaje y Comunicación", ColorLenguaje)
                         }
                         val notaTexto = if (ej.nota > 0) "${ej.nota}/10" else "10/10"
-                        FilaUltimaActividad("${ej.titulo.take(28)} · $nombreMateria", notaTexto, completado = true)
+                        FilaUltimaActividad(
+                            titulo = ej.titulo,
+                            asignatura = nombreMateria,
+                            colorAsignatura = colorMateria,
+                            nota = notaTexto,
+                            completado = true
+                        )
                     }
                 } else {
-                    FilaUltimaActividad("Sin actividades completadas aún", "0/10", completado = false)
+                    FilaUltimaActividad(
+                        titulo = "Sin actividades completadas aún",
+                        asignatura = "2.° Básico",
+                        colorAsignatura = GrisTexto,
+                        nota = "0/10",
+                        completado = false
+                    )
                 }
             }
         }
