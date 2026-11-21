@@ -39,9 +39,7 @@ import com.example.appmenu.ui.theme.*
 // pantalla: mi progreso mockup screen 10 mpaz pro 2.º
 
 @Composable
-fun ProgresoScreen(
-    onAbrirCuaderno: () -> Unit = {}
-) {
+fun ProgresoScreen() {
     // observamos en tiempo real todos los ejercicios y actividades
     val todosLosEjercicios by ActividadesManager.ejercicios.collectAsState()
 
@@ -226,48 +224,6 @@ fun ProgresoScreen(
                         completado = false
                     )
                 }
-            }
-        }
-
-        // acceso a cuaderno de tareas y notas room
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onAbrirCuaderno() },
-            shape = RoundedCornerShape(18.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFE3F2FD)),
-            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFBBDEFB))
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(CircleShape)
-                        .background(AzulBarraSuperior),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(Icons.Default.Book, contentDescription = null, tint = Color.White)
-                }
-                Spacer(modifier = Modifier.width(14.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "Observaciones",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = AzulBarraSuperior
-                    )
-                    Text(
-                        text = "Notas y observaciones de asignaturas y cursos",
-                        fontSize = 12.sp,
-                        color = GrisTexto
-                    )
-                }
-                Icon(Icons.Default.ChevronRight, contentDescription = null, tint = AzulBarraSuperior)
             }
         }
     }

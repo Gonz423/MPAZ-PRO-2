@@ -343,9 +343,7 @@ class MainActivity : FragmentActivity() {
                                 },
                                 onNavegarTrivia = { ruta = Ruta.TriviaRuta }
                             )
-                            Ruta.EstudianteProgreso -> ProgresoScreen(
-                                onAbrirCuaderno = { ruta = Ruta.EstudianteCuaderno }
-                            )
+                            Ruta.EstudianteProgreso -> ProgresoScreen()
                             Ruta.EstudianteCuaderno -> NotasScreen()
                             Ruta.EstudiantePerfil   -> PerfilScreen(
                                 esDocente = false,
