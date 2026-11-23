@@ -3,6 +3,7 @@ package com.example.appmenu.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.appmenu.network.RetrofitClient
+import com.example.appmenu.network.TriviaApi
 import com.example.appmenu.network.TriviaQuestion
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -11,7 +12,9 @@ import kotlinx.coroutines.launch
 
 // viewmodel para la pantalla de trivia de ciencias - mpaz pro 2.°
 
-class TriviaViewModel : ViewModel() {
+class TriviaViewModel(
+    private val triviaApi: TriviaApi = RetrofitClient.triviaApi
+) : ViewModel() {
 
     private val _pregunta  = MutableStateFlow<TriviaQuestion?>(null)
     val pregunta: StateFlow<TriviaQuestion?> = _pregunta.asStateFlow()
@@ -32,7 +35,7 @@ class TriviaViewModel : ViewModel() {
             _cargando.value = true
             _error.value    = null
             try {
-                val respuesta = RetrofitClient.triviaApi.obtenerPregunta()
+                val respuesta = triviaApi.obtenerPregunta()
                 _pregunta.value = respuesta.results.firstOrNull()
             } catch (e: Exception) {
                 _error.value = "No se pudo cargar la pregunta. Verifica tu conexión a internet."

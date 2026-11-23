@@ -1,4 +1,5 @@
 package com.example.appmenu.data
+
 import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
@@ -10,19 +11,19 @@ private val Context.dataStore by preferencesDataStore(
     name = "preferencias_estado"
 )
 
-class EstadoDataStore(private val context: Context) {
+open class EstadoDataStore(private val context: Context) {
 
     companion object {
         private val ESTADO_ACTIVADO =
             booleanPreferencesKey("estado_activado")
     }
 
-    val estadoActivado: Flow<Boolean> =
+    open val estadoActivado: Flow<Boolean> =
         context.dataStore.data.map { preferencias ->
             preferencias[ESTADO_ACTIVADO] ?: false
         }
 
-    suspend fun guardarEstado(activado: Boolean) {
+    open suspend fun guardarEstado(activado: Boolean) {
         context.dataStore.edit { preferencias ->
             preferencias[ESTADO_ACTIVADO] = activado
         }

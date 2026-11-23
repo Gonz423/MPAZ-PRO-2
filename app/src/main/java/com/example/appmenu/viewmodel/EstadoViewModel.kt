@@ -7,14 +7,13 @@ import com.example.appmenu.data.EstadoDataStore
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-class EstadoViewModel(application: Application) :
-    AndroidViewModel(application) {
-
-    private val repositorio = EstadoDataStore(application)
+class EstadoViewModel(
+    application: Application,
+    private val repositorio: EstadoDataStore = EstadoDataStore(application)
+) : AndroidViewModel(application) {
 
     private val _estadoActivado = MutableStateFlow(false)
     val estadoActivado = _estadoActivado.asStateFlow()
@@ -23,8 +22,7 @@ class EstadoViewModel(application: Application) :
     val cargando = _cargando.asStateFlow()
 
     private val _guardadoCorrectamente = MutableStateFlow(false)
-    val guardadoCorrectamente =
-        _guardadoCorrectamente.asStateFlow()
+    val guardadoCorrectamente = _guardadoCorrectamente.asStateFlow()
 
     private val _mensajeError = MutableStateFlow<String?>(null)
     val mensajeError = _mensajeError.asStateFlow()
@@ -33,15 +31,13 @@ class EstadoViewModel(application: Application) :
         cargarEstado()
     }
 
-    private fun cargarEstado() {
+    fun cargarEstado() {
         viewModelScope.launch {
             try {
                 delay(1000)
-                _estadoActivado.value =
-                    repositorio.estadoActivado.first()
+                _estadoActivado.value = repositorio.estadoActivado.first()
             } catch (e: Exception) {
-                _mensajeError.value =
-                    "No se pudo recuperar el estado guardado."
+                _mensajeError.value = "No se pudo recuperar el estado guardado."
             } finally {
                 _cargando.value = false
             }
@@ -58,8 +54,7 @@ class EstadoViewModel(application: Application) :
                 _estadoActivado.value = activado
                 _guardadoCorrectamente.value = true
             } catch (e: Exception) {
-                _mensajeError.value =
-                    "No se pudo guardar el estado."
+                _mensajeError.value = "No se pudo guardar el estado."
             }
         }
     }

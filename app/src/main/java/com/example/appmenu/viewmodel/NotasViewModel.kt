@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.appmenu.network.BackendClient
 import com.example.appmenu.network.ObservacionDto
+import com.example.appmenu.network.ProgresoApiService
 import com.example.appmenu.room.AppDatabase
 import com.example.appmenu.room.Note
 import com.example.appmenu.room.NoteRepository
@@ -22,26 +23,22 @@ data class NotasErrores(
 )
 
 // viewmodel modular para cuaderno de tareas y observaciones room
-class NotasViewModel(application: Application) : AndroidViewModel(application) {
-
-    private val repository: NoteRepository
+class NotasViewModel(
+    application: Application,
+    private val repository: NoteRepository = NoteRepository(AppDatabase.getInstance(application).noteDao()),
+    private val progresoApi: ProgresoApiService? = null
+) : AndroidViewModel(application) {
 
     // flujo observable de notas desde room
-    val notas: StateFlow<List<Note>>
+    val notas: StateFlow<List<Note>> = repository.notes.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
 
     // flujo reactivo de errores de validacion
     private val _errores = MutableStateFlow(NotasErrores())
     val errores: StateFlow<NotasErrores> = _errores.asStateFlow()
-
-    init {
-        val database = AppDatabase.getInstance(application)
-        repository = NoteRepository(database.noteDao())
-        notas = repository.notes.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList()
-        )
-    }
 
     fun limpiarErrorTitulo() {
         if (_errores.value.titulo != null) {
@@ -91,14 +88,15 @@ class NotasViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             repository.save(titulo.trim(), contenido.trim())
             try {
-                BackendClient.progresoApi.crearObservacion(
+                val api = progresoApi ?: BackendClient.progresoApi
+                api.crearObservacion(
                     ObservacionDto(
                         docenteId = 1L,
                         estudianteId = 1L,
                         contenido = "${titulo.trim()}: ${contenido.trim()}"
                     )
                 )
-            } catch (_: Exception) {
+            } catch (_: Throwable) {
                 // Modo offline seguro
             }
             limpiarErrores()

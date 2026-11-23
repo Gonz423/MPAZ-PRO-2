@@ -36,3 +36,21 @@ interface ContenidosApiService {
     @DELETE("api/ejercicios/{id}")
     suspend fun eliminarEjercicio(@Path("id") id: Long)
 }
+
+// microservicio ms-usuarios (puerto 8081)
+interface UsuariosApiService {
+    @POST("api/auth/login")
+    suspend fun login(@Body body: Map<String, String>): Map<String, Any>
+
+    @POST("api/auth/register")
+    suspend fun register(@Body body: Map<String, Any>): Map<String, Any>
+
+    @GET("api/usuarios")
+    suspend fun listarUsuarios(): List<Map<String, Any>>
+
+    @GET("api/usuarios/{id}")
+    suspend fun obtenerUsuario(@Path("id") id: Long): Map<String, Any>
+
+    @GET("api/usuarios/rol/{rol}")
+    suspend fun listarPorRol(@Path("rol") rol: String): List<Map<String, Any>>
+}
