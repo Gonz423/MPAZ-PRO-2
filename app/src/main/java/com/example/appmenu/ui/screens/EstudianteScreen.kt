@@ -28,6 +28,9 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import com.example.appmenu.data.SessionManager
+import com.example.appmenu.data.UsuarioSesion
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -58,6 +61,13 @@ fun EstudianteScreen(
     val cargando by estadoViewModel.cargando.collectAsState()
     val guardadoCorrectamente by estadoViewModel.guardadoCorrectamente.collectAsState()
     val mensajeError by estadoViewModel.mensajeError.collectAsState()
+
+    val sesion by SessionManager.getInstance(context).sesionFlow.collectAsState(initial = UsuarioSesion())
+    val nombreEstudiante = if (sesion.estaAutenticado && sesion.nombreCompleto.isNotBlank()) {
+        sesion.nombreCompleto.split(" ").firstOrNull() ?: sesion.nombreCompleto
+    } else {
+        "Martina"
+    }
 
     var estadoActivado by rememberSaveable { mutableStateOf(false) }
 
@@ -95,7 +105,7 @@ fun EstudianteScreen(
     ) {
         // banner de saludo
         BannerSaludoEstudiante(
-            nombre = "Martina",
+            nombre = nombreEstudiante,
             mensaje = "¿Qué aprenderemos hoy?"
         )
 

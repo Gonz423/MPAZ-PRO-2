@@ -96,15 +96,22 @@ class MainActivity : FragmentActivity() {
                     return@AppMenuTheme
                 }
 
-                // 1. pantalla de login / bienvenida mockup screens 1 y 2
+                // 1. pantalla de login / registro / bienvenida
                 if (ruta == Ruta.Selector) {
                     materiaSeleccionada = null
                     verLeccion = false
                     verActividadInteractiva = false
 
-                    SelectorPerfilScreen(
-                        onSeleccionarEstudiante = { ruta = Ruta.EstudianteInicio },
-                        onSeleccionarDocente    = {
+                    LoginRegistroScreen(
+                        onLoginExitoso = { rol ->
+                            if (rol.equals("DOCENTE", ignoreCase = true) || rol.equals("UTP", ignoreCase = true)) {
+                                ruta = Ruta.DocentePanel
+                            } else {
+                                ruta = Ruta.EstudianteInicio
+                            }
+                        },
+                        onAccesoRapidoEstudiante = { ruta = Ruta.EstudianteInicio },
+                        onAccesoRapidoDocente    = {
                             BiometricHelper.autenticarDocente(
                                 activity = this@MainActivity,
                                 onExito = { ruta = Ruta.DocentePanel }

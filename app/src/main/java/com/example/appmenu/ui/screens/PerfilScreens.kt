@@ -31,7 +31,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.launch
 import com.example.appmenu.data.CamaraUriFactory
+import com.example.appmenu.data.SessionManager
+import com.example.appmenu.data.UsuarioSesion
 import com.example.appmenu.ui.componentes.FilaDatoPerfil
 import com.example.appmenu.ui.componentes.ImagenInteligente
 import com.example.appmenu.ui.theme.*
@@ -48,6 +51,9 @@ fun PerfilScreen(
     onCerrarSesion: () -> Unit = {}
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val sessionManager = remember { SessionManager.getInstance(context) }
+    val sesion by sessionManager.sesionFlow.collectAsState(initial = UsuarioSesion())
     val imagenUri by perfilViewModel.imagenUri.collectAsState()
 
     // configuracion desde datastore
@@ -135,15 +141,19 @@ fun PerfilScreen(
                 // foto con bordes redondeados y soporte de camara nativa
                 ImagenInteligente(imagenUri = imagenUri)
 
+                val nombreMostrar = if (sesion.estaAutenticado && sesion.nombreCompleto.isNotBlank()) {
+                    sesion.nombreCompleto
+                } else if (esDocente) "Prof. Andrea Valenzuela" else "Martina González"
+
                 Text(
-                    text = if (esDocente) "Prof. Andrea Valenzuela" else "Martina González",
+                    text = nombreMostrar,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = TextoOscuro
                 )
 
                 Text(
-                    text = if (esDocente) "Docente titular 2.° Básico" else "Editar fotografía de credencial",
+                    text = if (sesion.estaAutenticado && sesion.email.isNotBlank()) sesion.email else if (esDocente) "Docente titular 2.° Básico" else "2.° Básico A · Escuela Marcela Paz",
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Medium,
                     color = AzulBarraSuperior
@@ -274,7 +284,12 @@ fun PerfilScreen(
 
         // boton cerrar sesion / cambiar de perfil
         OutlinedButton(
-            onClick = onCerrarSesion,
+            onClick = {
+                coroutineScope.launch {
+                    sessionManager.cerrarSesion()
+                    onCerrarSesion()
+                }
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(48.dp),

@@ -31,6 +31,7 @@ public class UsuarioService {
     public LoginResponse login(LoginRequest request) {
         String username = request.getUsername() != null ? request.getUsername().trim() : "";
         Usuario usuario = usuarioRepository.findByUsernameIgnoreCase(username)
+                .or(() -> usuarioRepository.findByEmailIgnoreCase(username))
                 .orElseThrow(() -> new BadCredentialsException("Credenciales inválidas"));
 
         if (!passwordEncoder.matches(request.getPassword(), usuario.getPassword())) {

@@ -46,3 +46,40 @@ data class UnidadDto(
     @SerializedName("titulo")              val titulo: String = "",
     @SerializedName("objetivoAprendizaje") val objetivoAprendizaje: String? = null
 )
+
+// DTOs para autenticacion y gestion de usuarios (ms-usuarios : 8081)
+
+data class LoginRequestDto(
+    @SerializedName("username") val username: String,
+    @SerializedName("password") val password: String
+)
+
+data class LoginResponseDto(
+    @SerializedName("token")          val token: String = "",
+    @SerializedName("id")             val id: Long = 1,
+    @SerializedName("username")       val username: String = "",
+    @SerializedName("nombreCompleto") val nombreCompleto: String = "",
+    @SerializedName("email")          val email: String? = null,
+    @SerializedName("rol")            val rol: String = "ESTUDIANTE",
+    @SerializedName("curso")          val curso: String? = null,
+    @SerializedName("tokenType")      val tokenType: String? = "Bearer"
+)
+
+data class RegisterRequestDto(
+    @SerializedName("username")       val username: String,
+    @SerializedName("password")       val password: String,
+    @SerializedName("nombreCompleto") val nombreCompleto: String,
+    @SerializedName("email")          val email: String? = null,
+    @SerializedName("rol")            val rol: String = "ESTUDIANTE",
+    @SerializedName("curso")          val curso: String? = "2° Básico A"
+)
+
+data class UsuarioResponseDto(
+    @SerializedName("id")             val id: Long = 1,
+    @SerializedName("username")       val username: String = "",
+    @SerializedName("nombreCompleto") val nombreCompleto: String = "",
+    @SerializedName("email")          val email: String? = null,
+    @SerializedName("rol")            val rol: String = "ESTUDIANTE",
+    @SerializedName("curso")          val curso: String? = null,
+    @SerializedName("activo")         val activo: Boolean? = true
+)

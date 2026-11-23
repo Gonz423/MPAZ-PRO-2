@@ -28,6 +28,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
+import com.example.appmenu.data.SessionManager
+import com.example.appmenu.data.UsuarioSesion
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -53,6 +56,12 @@ fun DocenteScreen(
     onNavegarTrivia: () -> Unit = {}
 ) {
     val context = LocalContext.current
+    val sesion by SessionManager.getInstance(context).sesionFlow.collectAsState(initial = UsuarioSesion())
+    val nombreDocente = if (sesion.estaAutenticado && sesion.nombreCompleto.isNotBlank()) {
+        "Prof. ${sesion.nombreCompleto.split(" ").firstOrNull() ?: sesion.nombreCompleto}"
+    } else {
+        "Prof. Andrea"
+    }
 
     // estado del curso desplegado para ver su progreso por asignatura
     var cursoDesplegado by remember { mutableStateOf<String?>("A") }
@@ -116,7 +125,7 @@ fun DocenteScreen(
                 shape = RoundedCornerShape(10.dp)
             ) {
                 Text(
-                    text = "Prof. Andrea",
+                    text = nombreDocente,
                     color = AzulBarraSuperior,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
