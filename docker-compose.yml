@@ -1,0 +1,150 @@
+# MPAZ PRO 2 - Orquestacion de microservicios Spring Boot + MySQL
+#
+# Cada microservicio tiene su PROPIA base de datos MySQL (database-per-service):
+#   ms-usuarios   (8081) -> db-usuarios   (MySQL, puerto host 3307)
+#   ms-contenidos (8082) -> db-contenidos (MySQL, puerto host 3308)
+#   ms-progreso   (8083) -> db-progreso   (MySQL, puerto host 3309)
+#
+# Uso:
+#   1. Copiar .env.example a .env y definir las claves
+#   2. docker compose up --build
+#
+# Swagger:
+#   http://localhost:8081/swagger-ui.html
+#   http://localhost:8082/swagger-ui.html
+#   http://localhost:8083/swagger-ui.html
+
+x-mysql-healthcheck: &mysql-healthcheck
+  test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+  interval: 10s
+  timeout: 5s
+  retries: 12
+  start_period: 30s
+
+x-mysql-env: &mysql-env
+  MYSQL_USER: ${DB_USER}
+  MYSQL_PASSWORD: ${DB_PASSWORD}
+  MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+
+x-service-env: &service-env
+  SPRING_PROFILES_ACTIVE: docker
+  DB_USER: ${DB_USER}
+  DB_PASSWORD: ${DB_PASSWORD}
+  JWT_SECRET: ${JWT_SECRET}
+
+services:
+  # ---------------- Bases de datos ----------------
+  db-usuarios:
+    image: mysql:8.4
+    container_name: mpaz-db-usuarios
+    environment:
+      <<: *mysql-env
+      MYSQL_DATABASE: mpaz_usuarios
+    ports:
+      - "3307:3306"
+    volumes:
+      - db-usuarios-data:/var/lib/mysql
+    healthcheck: *mysql-healthcheck
+    networks: [mpaz-net]
+    restart: unless-stopped
+
+  db-contenidos:
+    image: mysql:8.4
+    container_name: mpaz-db-contenidos
+    environment:
+      <<: *mysql-env
+      MYSQL_DATABASE: mpaz_contenidos
+    ports:
+      - "3308:3306"
+    volumes:
+      - db-contenidos-data:/var/lib/mysql
+    healthcheck: *mysql-healthcheck
+    networks: [mpaz-net]
+    restart: unless-stopped
+
+  db-progreso:
+    image: mysql:8.4
+    container_name: mpaz-db-progreso
+    environment:
+      <<: *mysql-env
+      MYSQL_DATABASE: mpaz_progreso
+    ports:
+      - "3309:3306"
+    volumes:
+      - db-progreso-data:/var/lib/mysql
+    healthcheck: *mysql-healthcheck
+    networks: [mpaz-net]
+    restart: unless-stopped
+
+  # ---------------- Microservicios ----------------
+  ms-usuarios:
+    build: ./ms-usuarios
+    container_name: mpaz-ms-usuarios
+    environment:
+      <<: *service-env
+      DB_HOST: db-usuarios
+      DB_NAME: mpaz_usuarios
+    ports:
+      - "8081:8081"
+    depends_on:
+      db-usuarios:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health | grep -q UP"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+    networks: [mpaz-net]
+    restart: unless-stopped
+
+  ms-contenidos:
+    build: ./ms-contenidos
+    container_name: mpaz-ms-contenidos
+    environment:
+      <<: *service-env
+      DB_HOST: db-contenidos
+      DB_NAME: mpaz_contenidos
+    ports:
+      - "8082:8082"
+    depends_on:
+      db-contenidos:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8082/actuator/health | grep -q UP"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+    networks: [mpaz-net]
+    restart: unless-stopped
+
+  ms-progreso:
+    build: ./ms-progreso
+    container_name: mpaz-ms-progreso
+    environment:
+      <<: *service-env
+      DB_HOST: db-progreso
+      DB_NAME: mpaz_progreso
+    ports:
+      - "8083:8083"
+    depends_on:
+      db-progreso:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8083/actuator/health | grep -q UP"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+    networks: [mpaz-net]
+    restart: unless-stopped
+
+volumes:
+  db-usuarios-data:
+  db-contenidos-data:
+  db-progreso-data:
+
+networks:
+  mpaz-net:
+    driver: bridge
