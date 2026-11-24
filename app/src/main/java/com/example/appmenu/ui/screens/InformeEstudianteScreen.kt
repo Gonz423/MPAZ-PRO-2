@@ -57,8 +57,8 @@ fun InformeEstudianteScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(FondoApp)
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState()),
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Column {

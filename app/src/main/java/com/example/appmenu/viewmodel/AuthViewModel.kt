@@ -1,16 +1,14 @@
 package com.example.appmenu.viewmodel
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.appmenu.data.SessionManager
-import com.example.appmenu.network.BackendClient
-import com.example.appmenu.network.LoginRequestDto
-import com.example.appmenu.network.RegisterRequestDto
-import com.example.appmenu.network.UsuariosApiService
+import com.example.appmenu.data.repository.AuthRepository
+import com.example.appmenu.domain.model.ErrorRed
+import com.example.appmenu.domain.model.mensajeUsuario
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class AuthUiState(
@@ -37,174 +35,116 @@ data class AuthUiState(
     val regMensajeExito: String? = null
 )
 
-class AuthViewModel(
-    application: Application,
-    private val sessionManager: SessionManager = SessionManager.getInstance(application),
-    private val usuariosApi: UsuariosApiService = BackendClient.usuariosApi
-) : AndroidViewModel(application) {
+class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AuthUiState())
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
 
-    // --- Metodos Login ---
+    // ---------------- login ----------------
 
-    fun onLoginIdentificadorChanged(valor: String) {
-        _uiState.value = _uiState.value.copy(
-            loginIdentificador = valor,
-            loginErrorIdentificador = null,
-            loginMensajeError = null
-        )
+    fun onLoginIdentificadorChanged(valor: String) = _uiState.update {
+        it.copy(loginIdentificador = valor, loginErrorIdentificador = null, loginMensajeError = null)
     }
 
-    fun onLoginPasswordChanged(valor: String) {
-        _uiState.value = _uiState.value.copy(
-            loginPassword = valor,
-            loginErrorPassword = null,
-            loginMensajeError = null
-        )
+    fun onLoginPasswordChanged(valor: String) = _uiState.update {
+        it.copy(loginPassword = valor, loginErrorPassword = null, loginMensajeError = null)
     }
 
     fun iniciarSesion(onExito: (rol: String) -> Unit) {
         val ident = _uiState.value.loginIdentificador.trim()
         val pass = _uiState.value.loginPassword.trim()
 
-        var hayError = false
-        if (ident.isBlank()) {
-            _uiState.value = _uiState.value.copy(loginErrorIdentificador = "Ingresa tu correo o usuario")
-            hayError = true
+        val errorIdent = if (ident.isBlank()) "Ingresa tu correo o usuario" else null
+        val errorPass = if (pass.isBlank()) "Ingresa tu contraseña" else null
+        if (errorIdent != null || errorPass != null) {
+            _uiState.update { it.copy(loginErrorIdentificador = errorIdent, loginErrorPassword = errorPass) }
+            return
         }
-        if (pass.isBlank()) {
-            _uiState.value = _uiState.value.copy(loginErrorPassword = "Ingresa tu contraseña")
-            hayError = true
-        }
-        if (hayError) return
 
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(loginCargando = true, loginMensajeError = null)
-            try {
-                // Intento 1: Servidor ms-usuarios Spring Boot (8081)
-                val response = usuariosApi.login(LoginRequestDto(username = ident, password = pass))
-                sessionManager.guardarSesion(response)
-                _uiState.value = _uiState.value.copy(loginCargando = false)
-                onExito(response.rol)
-            } catch (e: Exception) {
-                // Modo fallback offline seguro para pruebas / sin backend
-                val identLower = ident.lowercase()
-                val rolFallback = when {
-                    (identLower.contains("docente") || identLower.contains("profesor")) && pass == "1234" -> "DOCENTE"
-                    (identLower.contains("estudiante") || identLower.contains("alumno") || identLower.contains("@")) && pass == "1234" -> "ESTUDIANTE"
-                    identLower == "utp" && pass == "1234" -> "DOCENTE"
-                    else -> null
+            _uiState.update { it.copy(loginCargando = true, loginMensajeError = null) }
+            authRepository.login(ident, pass)
+                .onSuccess { sesion ->
+                    _uiState.update { it.copy(loginCargando = false) }
+                    onExito(sesion.rol)
                 }
+                .onFailure { error ->
+                    // el modo sin conexion solo se usa si el servidor NO responde;
+                    // si responde 401 las credenciales son realmente incorrectas
+                    val sesionLocal = if (error is ErrorRed.SinConexion) {
+                        authRepository.loginSinConexion(ident, pass)
+                    } else null
 
-                if (rolFallback != null) {
-                    val nombre = if (rolFallback == "DOCENTE") "Profesora Marcela" else "Mateo Silva"
-                    sessionManager.guardarSesionLocal(
-                        id = 1L,
-                        username = ident,
-                        nombreCompleto = nombre,
-                        email = if (ident.contains("@")) ident else "$ident@marcelapaz.cl",
-                        rol = rolFallback,
-                        curso = "2° Básico A"
-                    )
-                    _uiState.value = _uiState.value.copy(loginCargando = false)
-                    onExito(rolFallback)
-                } else {
-                    val errorMsg = if (e.message?.contains("401") == true || e.message?.contains("Credenciales") == true) {
-                        "Credenciales incorrectas. Verifica tu correo y contraseña."
+                    if (sesionLocal != null) {
+                        _uiState.update { it.copy(loginCargando = false) }
+                        onExito(sesionLocal.rol)
                     } else {
-                        "Credenciales incorrectas o microservicio no disponible (prueba: estudiante / 1234)."
+                        _uiState.update { it.copy(loginCargando = false, loginMensajeError = mensajeLogin(error)) }
                     }
-                    _uiState.value = _uiState.value.copy(
-                        loginCargando = false,
-                        loginMensajeError = errorMsg
-                    )
                 }
-            }
         }
     }
 
-    // --- Metodos Registro ---
-
-    fun onRegNombreChanged(valor: String) {
-        _uiState.value = _uiState.value.copy(regNombreCompleto = valor, regErrorNombre = null, regMensajeError = null)
+    private fun mensajeLogin(error: Throwable): String = when (error) {
+        is ErrorRed.NoAutorizado -> "Credenciales incorrectas. Verifica tu correo y contraseña."
+        is ErrorRed.SinConexion -> "Microservicio no disponible. Sin conexión solo funcionan las cuentas de prueba (estudiante / 1234)."
+        else -> error.mensajeUsuario()
     }
 
-    fun onRegEmailChanged(valor: String) {
-        _uiState.value = _uiState.value.copy(regEmail = valor, regErrorEmail = null, regMensajeError = null)
+    // ---------------- registro ----------------
+
+    fun onRegNombreChanged(valor: String) = _uiState.update {
+        it.copy(regNombreCompleto = valor, regErrorNombre = null, regMensajeError = null)
     }
 
-    fun onRegPasswordChanged(valor: String) {
-        _uiState.value = _uiState.value.copy(regPassword = valor, regErrorPassword = null, regMensajeError = null)
+    fun onRegEmailChanged(valor: String) = _uiState.update {
+        it.copy(regEmail = valor, regErrorEmail = null, regMensajeError = null)
     }
 
-    fun onRegRolChanged(valor: String) {
-        _uiState.value = _uiState.value.copy(regRol = valor)
+    fun onRegPasswordChanged(valor: String) = _uiState.update {
+        it.copy(regPassword = valor, regErrorPassword = null, regMensajeError = null)
     }
 
-    fun onRegCursoChanged(valor: String) {
-        _uiState.value = _uiState.value.copy(regCurso = valor)
-    }
+    fun onRegRolChanged(valor: String) = _uiState.update { it.copy(regRol = valor) }
+
+    fun onRegCursoChanged(valor: String) = _uiState.update { it.copy(regCurso = valor) }
 
     fun registrarse(onExito: (rol: String) -> Unit) {
-        val nombre = _uiState.value.regNombreCompleto.trim()
-        val email = _uiState.value.regEmail.trim()
-        val pass = _uiState.value.regPassword.trim()
-        val rol = _uiState.value.regRol
-        val curso = _uiState.value.regCurso.trim()
+        val estado = _uiState.value
+        val nombre = estado.regNombreCompleto.trim()
+        val email = estado.regEmail.trim()
+        val pass = estado.regPassword.trim()
+        val rol = estado.regRol
+        val curso = estado.regCurso.trim()
 
-        var hayError = false
-        if (nombre.length < 3) {
-            _uiState.value = _uiState.value.copy(regErrorNombre = "Ingresa tu nombre completo (mín. 3 letras)")
-            hayError = true
+        val errorNombre = if (nombre.length < 3) "Ingresa tu nombre completo (mín. 3 letras)" else null
+        val errorEmail = if (!email.contains("@") || !email.contains(".")) "Ingresa un correo electrónico válido" else null
+        val errorPass = if (pass.length < 4) "La contraseña debe tener al menos 4 caracteres" else null
+        if (errorNombre != null || errorEmail != null || errorPass != null) {
+            _uiState.update {
+                it.copy(regErrorNombre = errorNombre, regErrorEmail = errorEmail, regErrorPassword = errorPass)
+            }
+            return
         }
-        if (!email.contains("@") || !email.contains(".")) {
-            _uiState.value = _uiState.value.copy(regErrorEmail = "Ingresa un correo electrónico válido")
-            hayError = true
-        }
-        if (pass.length < 4) {
-            _uiState.value = _uiState.value.copy(regErrorPassword = "La contraseña debe tener al menos 4 caracteres")
-            hayError = true
-        }
-        if (hayError) return
-
-        // Generar username basado en email
-        val usernameGenerado = email.substringBefore("@").replace(".", "_")
 
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(regCargando = true, regMensajeError = null)
-            try {
-                // Registrar en ms-usuarios
-                usuariosApi.register(
-                    RegisterRequestDto(
-                        username = usernameGenerado,
-                        password = pass,
-                        nombreCompleto = nombre,
-                        email = email,
-                        rol = rol,
-                        curso = curso
-                    )
-                )
-
-                // Login automático para obtener JWT y sesión
-                val loginRes = usuariosApi.login(LoginRequestDto(username = usernameGenerado, password = pass))
-                sessionManager.guardarSesion(loginRes)
-
-                _uiState.value = _uiState.value.copy(regCargando = false, regMensajeExito = "¡Cuenta creada exitosamente!")
-                onExito(rol)
-            } catch (e: Exception) {
-                // Si el servidor falla, guardamos localmente en modo offline
-                sessionManager.guardarSesionLocal(
-                    id = System.currentTimeMillis() % 10000,
-                    username = usernameGenerado,
-                    nombreCompleto = nombre,
-                    email = email,
-                    rol = rol,
-                    curso = curso
-                )
-                _uiState.value = _uiState.value.copy(regCargando = false, regMensajeExito = "¡Registro local completado!")
-                onExito(rol)
-            }
+            _uiState.update { it.copy(regCargando = true, regMensajeError = null) }
+            authRepository.registrar(nombre, email, pass, rol, curso)
+                .onSuccess {
+                    _uiState.update { it.copy(regCargando = false, regMensajeExito = "¡Cuenta creada exitosamente!") }
+                    onExito(rol)
+                }
+                .onFailure { error ->
+                    if (error is ErrorRed.SinConexion) {
+                        // sin servidor: la cuenta queda solo en este dispositivo
+                        authRepository.registrarSinConexion(nombre, email, rol, curso)
+                        _uiState.update { it.copy(regCargando = false, regMensajeExito = "¡Registro local completado!") }
+                        onExito(rol)
+                    } else {
+                        // por ejemplo 400 "El nombre de usuario ya está registrado"
+                        _uiState.update { it.copy(regCargando = false, regMensajeError = error.mensajeUsuario()) }
+                    }
+                }
         }
     }
 }

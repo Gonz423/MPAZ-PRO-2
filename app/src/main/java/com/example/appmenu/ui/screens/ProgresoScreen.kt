@@ -22,9 +22,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.LaunchedEffect
-import com.example.appmenu.model.ActividadesManager
-import com.example.appmenu.network.BackendClient
-import com.example.appmenu.network.ResultadoDto
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.appmenu.di.AppViewModelProvider
+import com.example.appmenu.viewmodel.ProgresoViewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,55 +40,23 @@ import com.example.appmenu.ui.theme.*
 // pantalla: mi progreso mockup screen 10 mpaz pro 2.º
 
 @Composable
-fun ProgresoScreen() {
-    // observamos en tiempo real todos los ejercicios y actividades
-    val todosLosEjercicios by ActividadesManager.ejercicios.collectAsState()
+fun ProgresoScreen(
+    viewModel: ProgresoViewModel = viewModel(factory = AppViewModelProvider.Factory)
+) {
+    // el ViewModel combina el avance local con los resultados guardados en ms-progreso
+    val todosLosEjercicios by viewModel.ejercicios.collectAsStateWithLifecycle()
+    val porcentajes by viewModel.porcentajes.collectAsStateWithLifecycle()
 
-    // estado sincronizado con el microservicio ms-progreso
-    var resultadosBackend by remember { mutableStateOf<List<ResultadoDto>>(emptyList()) }
-    var backendConectado by remember { mutableStateOf(false) }
-
-    LaunchedEffect(Unit) {
-        try {
-            val lista = BackendClient.progresoApi.listarResultados(estudianteId = 1L)
-            if (lista.isNotEmpty()) {
-                resultadosBackend = lista
-                backendConectado = true
-                // Sincronizar hacia ActividadesManager los resultados del backend
-                lista.forEach { res ->
-                    todosLosEjercicios.find {
-                        it.materiaId.equals(res.materiaId, ignoreCase = true) ||
-                        (it.codigoGuia.toLongOrNull() == res.ejercicioId)
-                    }?.let { ej ->
-                        if (!ej.completado) {
-                            ActividadesManager.marcarCompletado(ej.id, res.nota)
-                        }
-                    }
-                }
-            }
-        } catch (_: Exception) {
-            backendConectado = false
-        }
-    }
-
-    // calculo dinamico reactivo del porcentaje de progreso por asignatura
-    fun calcularPorcentaje(materiaId: String): Int {
-        val ejercicios = todosLosEjercicios.filter { it.materiaId.equals(materiaId, ignoreCase = true) }
-        if (ejercicios.isEmpty()) return 0
-        val completados = ejercicios.count { it.completado }
-        return ((completados.toFloat() / ejercicios.size.toFloat()) * 100).toInt()
-    }
-
-    val pctLenguaje = remember(todosLosEjercicios) { calcularPorcentaje("lenguaje") }
-    val pctMatematica = remember(todosLosEjercicios) { calcularPorcentaje("matematica") }
-    val pctCiencias = remember(todosLosEjercicios) { calcularPorcentaje("ciencias") }
-    val pctHistoria = remember(todosLosEjercicios) { calcularPorcentaje("historia") }
+    val pctLenguaje = porcentajes["lenguaje"] ?: 0
+    val pctMatematica = porcentajes["matematica"] ?: 0
+    val pctCiencias = porcentajes["ciencias"] ?: 0
+    val pctHistoria = porcentajes["historia"] ?: 0
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(FondoApp)
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState()),
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // cabecera del estudiante

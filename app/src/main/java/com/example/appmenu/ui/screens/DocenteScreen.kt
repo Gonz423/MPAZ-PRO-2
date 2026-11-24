@@ -29,17 +29,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
-import com.example.appmenu.data.SessionManager
-import com.example.appmenu.data.UsuarioSesion
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.appmenu.di.AppViewModelProvider
+import com.example.appmenu.viewmodel.ContenidosViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.appmenu.model.ActividadesManager
-import com.example.appmenu.model.ConfiguracionEducativa
-import com.example.appmenu.model.ProgresoAsignatura
+import com.example.appmenu.ui.model.ConfiguracionEducativa
+import com.example.appmenu.ui.model.ProgresoAsignatura
 import com.example.appmenu.ui.componentes.FilaProgresoAsignatura
 import com.example.appmenu.ui.componentes.TarjetaAccionDocente
 import com.example.appmenu.ui.theme.*
@@ -53,10 +54,11 @@ fun DocenteScreen(
     onNavegarNotas: () -> Unit = {},
     onNavegarInformeEstudiante: () -> Unit = {},
     onSeleccionarAsignatura: (String) -> Unit = {},
-    onNavegarTrivia: () -> Unit = {}
+    onNavegarTrivia: () -> Unit = {},
+    contenidosViewModel: ContenidosViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val context = LocalContext.current
-    val sesion by SessionManager.getInstance(context).sesionFlow.collectAsState(initial = UsuarioSesion())
+    val sesion by contenidosViewModel.sesion.collectAsStateWithLifecycle()
     val nombreDocente = if (sesion.estaAutenticado && sesion.nombreCompleto.isNotBlank()) {
         "Prof. ${sesion.nombreCompleto.split(" ").firstOrNull() ?: sesion.nombreCompleto}"
     } else {
@@ -67,7 +69,7 @@ fun DocenteScreen(
     var cursoDesplegado by remember { mutableStateOf<String?>("A") }
 
     // observamos las actividades de los alumnos
-    val todosLosEjercicios by ActividadesManager.ejercicios.collectAsState()
+    val todosLosEjercicios by contenidosViewModel.ejercicios.collectAsStateWithLifecycle()
     fun calcularPorcentajeMateria(materiaId: String, baseFallback: Int): Int {
         val ejercicios = todosLosEjercicios.filter { it.materiaId.equals(materiaId, ignoreCase = true) }
         if (ejercicios.isEmpty()) return baseFallback
@@ -96,8 +98,8 @@ fun DocenteScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(FondoApp)
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState()),
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // cabecera del panel docente

@@ -1,7 +1,5 @@
 package com.example.appmenu.ui.screens
 
-import android.os.Build
-import android.text.Html
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -14,21 +12,25 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.appmenu.network.TriviaQuestion
+import coil.compose.AsyncImage
+import com.example.appmenu.di.AppViewModelProvider
+import com.example.appmenu.domain.model.PreguntaTrivia
 import com.example.appmenu.ui.theme.*
 import com.example.appmenu.viewmodel.TriviaViewModel
 
-// PANTALLA: TRIVIA DE CIENCIAS NATURALES (OPEN TRIVIA DB) - mpaz pro 2.°
+// PANTALLA: DESAFIO CIENTIFICO · CURIOSIDADES (API externa: Wikipedia en español) - mpaz pro 2.°
 
 @Composable
 fun TriviaScreen(
-    triviaViewModel: TriviaViewModel = viewModel()
+    triviaViewModel: TriviaViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val pregunta  by triviaViewModel.pregunta.collectAsState()
     val cargando  by triviaViewModel.cargando.collectAsState()
@@ -38,8 +40,8 @@ fun TriviaScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(FondoApp)
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState()),
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // cabecera
@@ -57,7 +59,7 @@ fun TriviaScreen(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Dato del día · Ciencias",
+                    text = "Desafío Científico",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = TextoOscuro
@@ -126,41 +128,22 @@ fun TriviaScreen(
     }
 }
 
-// tarjeta con la pregunta y las opciones de respuesta
+// tarjeta con la pista, la imagen y las alternativas de respuesta
 @Composable
 private fun TarjetaPreguntaTrivia(
-    pregunta: TriviaQuestion,
+    pregunta: PreguntaTrivia,
     onNuevaPregunta: () -> Unit
 ) {
-    // decodificar HTML entities del texto
-    @Suppress("DEPRECATION")
-    fun decodificarHtml(texto: String): String =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
-            Html.fromHtml(texto, Html.FROM_HTML_MODE_LEGACY).toString()
-        else
-            Html.fromHtml(texto).toString()
-
     // mezclar las opciones: 1 correcta + 3 incorrectas en orden aleatorio
     val opcionesMezcladas = remember(pregunta) {
-        (pregunta.incorrectAnswers + pregunta.correctAnswer).shuffled()
+        (pregunta.respuestasIncorrectas + pregunta.respuestaCorrecta).shuffled()
     }
 
-    var seleccionada     by remember { mutableStateOf<String?>(null) }
-    var mostrarResultado by remember { mutableStateOf(false) }
+    // el estado de la respuesta se reinicia con cada pregunta nueva
+    var seleccionada by remember(pregunta) { mutableStateOf<String?>(null) }
+    val mostrarResultado = seleccionada != null
 
-    // badge de dificultad
-    val colorDificultad = when (pregunta.difficulty) {
-        "easy"   -> Color(0xFF2E7D32)
-        "medium" -> Color(0xFFF9A825)
-        else     -> Color(0xFFC62828)
-    }
-    val textoDificultad = when (pregunta.difficulty) {
-        "easy"   -> "Fácil"
-        "medium" -> "Medio"
-        else     -> "Difícil"
-    }
-
-    // tarjeta de pregunta
+    // tarjeta de la pista
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
@@ -171,39 +154,55 @@ private fun TarjetaPreguntaTrivia(
             modifier = Modifier.padding(18.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // fila de metadatos: categoria y dificultad
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            Surface(
+                color = ColorCiencias.copy(alpha = 0.12f),
+                shape = RoundedCornerShape(8.dp)
             ) {
                 Text(
-                    text = decodificarHtml(pregunta.category),
-                    fontSize = 11.sp,
-                    color = GrisTexto,
-                    fontWeight = FontWeight.Medium
+                    text = pregunta.categoria,
+                    color = ColorCiencias,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                 )
-                Surface(
-                    color = colorDificultad.copy(alpha = 0.12f),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text(
-                        text = textoDificultad,
-                        color = colorDificultad,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+            }
+
+            // imagen del tema (apoyo visual para estudiantes que aun no leen con fluidez)
+            if (pregunta.imagenUrl != null) {
+                // la foto se muestra completa (Fit) en un recuadro con su misma proporcion:
+                // sin recortes y sin bandas vacias; las fotos verticales se limitan a 280 dp de alto
+                val proporcion = (pregunta.imagenProporcion ?: (4f / 3f)).coerceIn(0.5f, 2.5f)
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    AsyncImage(
+                        model = pregunta.imagenUrl,
+                        contentDescription = "Imagen de apoyo para adivinar",
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier
+                            .heightIn(max = 280.dp)
+                            .aspectRatio(proporcion)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(Color(0xFFE8F5E9))
                     )
                 }
             }
 
-            // texto de la pregunta
             Text(
-                text = decodificarHtml(pregunta.question),
-                fontSize = 16.sp,
+                text = "🔍 Pista",
+                fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
+                color = GrisTexto
+            )
+            Text(
+                text = pregunta.pista,
+                fontSize = 15.sp,
                 color = TextoOscuro,
-                lineHeight = 22.sp
+                lineHeight = 21.sp
+            )
+            Text(
+                text = pregunta.pregunta,
+                fontSize = 17.sp,
+                fontWeight = FontWeight.Bold,
+                color = TextoOscuro
             )
         }
     }
@@ -211,36 +210,27 @@ private fun TarjetaPreguntaTrivia(
     // opciones de respuesta como botones
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         opcionesMezcladas.forEach { opcion ->
-            val esCorrecta   = opcion == pregunta.correctAnswer
-            val estaElegida  = opcion == seleccionada
+            val esCorrecta = opcion == pregunta.respuestaCorrecta
+            val estaElegida = opcion == seleccionada
 
             val colorBoton = when {
-                !mostrarResultado       -> if (estaElegida) ColorCiencias else BlancoTarjeta
-                esCorrecta              -> Color(0xFF2E7D32)
-                estaElegida             -> Color(0xFFC62828)
-                else                    -> BlancoTarjeta
+                !mostrarResultado -> BlancoTarjeta
+                esCorrecta -> Color(0xFF2E7D32)
+                estaElegida -> Color(0xFFC62828)
+                else -> BlancoTarjeta
             }
-            val colorTexto = when {
-                !mostrarResultado && estaElegida -> Color.White
-                mostrarResultado && (esCorrecta || estaElegida) -> Color.White
-                else -> TextoOscuro
-            }
+            val colorTexto = if (mostrarResultado && (esCorrecta || estaElegida)) Color.White else TextoOscuro
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(14.dp),
                 colors = CardDefaults.cardColors(containerColor = colorBoton),
                 elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-                onClick = {
-                    if (!mostrarResultado) {
-                        seleccionada = opcion
-                        mostrarResultado = true
-                    }
-                }
+                onClick = { if (!mostrarResultado) seleccionada = opcion }
             ) {
                 Text(
-                    text = decodificarHtml(opcion),
-                    fontSize = 14.sp,
+                    text = opcion,
+                    fontSize = 15.sp,
                     fontWeight = FontWeight.Medium,
                     color = colorTexto,
                     modifier = Modifier.padding(14.dp)
@@ -249,31 +239,36 @@ private fun TarjetaPreguntaTrivia(
         }
     }
 
-    // mensaje de resultado
+    // resultado + dato completo
     if (mostrarResultado) {
-        val esCorrecto = seleccionada == pregunta.correctAnswer
+        val esCorrecto = seleccionada == pregunta.respuestaCorrecta
         Surface(
             color = if (esCorrecto) Color(0xFFE8F5E9) else Color(0xFFFFEBEE),
             shape = RoundedCornerShape(12.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(
-                text = if (esCorrecto) "✅ ¡Excelente! Respuesta correcta." else "❌ ¡Casi! La respuesta correcta era: ${decodificarHtml(pregunta.correctAnswer)}",
-                color = if (esCorrecto) Color(0xFF2E7D32) else Color(0xFFC62828),
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.padding(14.dp)
-            )
+            Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = if (esCorrecto) "✅ ¡Excelente! Era: ${pregunta.respuestaCorrecta}"
+                    else "❌ ¡Casi! La respuesta correcta era: ${pregunta.respuestaCorrecta}",
+                    color = if (esCorrecto) Color(0xFF2E7D32) else Color(0xFFC62828),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "💡 ¿Sabías que...? ${pregunta.datoCompleto}",
+                    color = TextoOscuro,
+                    fontSize = 13.sp,
+                    lineHeight = 19.sp
+                )
+                Text(text = "Fuente: Wikipedia en español", color = GrisTexto, fontSize = 11.sp)
+            }
         }
     }
 
     // boton nueva pregunta
     Button(
-        onClick = {
-            seleccionada = null
-            mostrarResultado = false
-            onNuevaPregunta()
-        },
+        onClick = onNuevaPregunta,
         modifier = Modifier
             .fillMaxWidth()
             .height(50.dp),

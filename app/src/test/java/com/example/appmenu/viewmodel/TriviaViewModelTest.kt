@@ -1,8 +1,8 @@
 package com.example.appmenu.viewmodel
 
-import com.example.appmenu.network.TriviaApi
-import com.example.appmenu.network.TriviaQuestion
-import com.example.appmenu.network.TriviaResponse
+import com.example.appmenu.data.repository.TriviaRepository
+import com.example.appmenu.domain.model.ErrorRed
+import com.example.appmenu.domain.model.PreguntaTrivia
 import com.example.appmenu.util.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -11,11 +11,9 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Rule
 import org.junit.Test
-import java.io.IOException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class TriviaViewModelTest {
@@ -23,81 +21,69 @@ class TriviaViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val triviaApi: TriviaApi = mockk()
+    private val repo: TriviaRepository = mockk()
 
-    private val sampleQuestion = TriviaQuestion(
-        category = "Science & Nature",
-        type = "multiple",
-        difficulty = "easy",
-        question = "¿Cuál es el planeta más grande del sistema solar?",
-        correctAnswer = "Júpiter",
-        incorrectAnswers = listOf("Marte", "Venus", "Saturno")
+    private val pregunta = PreguntaTrivia(
+        categoria = "Animales",
+        pista = "El ___ andino es una especie de ave.",
+        pregunta = "¿De qué se trata este dato?",
+        respuestaCorrecta = "Cóndor",
+        respuestasIncorrectas = listOf("Puma", "Pudú", "Huemul"),
+        imagenUrl = "https://upload.wikimedia.org/condor.jpg",
+        datoCompleto = "El cóndor andino es una especie de ave."
     )
 
     @Test
-    fun `cargarPregunta exitosa actualiza pregunta y limpia errores`() = runTest {
-        val mockResponse = TriviaResponse(
-            responseCode = 0,
-            results = listOf(sampleQuestion)
-        )
-        coEvery { triviaApi.obtenerPregunta(any(), any(), any()) } returns mockResponse
+    fun `al crearse carga una pregunta y limpia errores`() = runTest {
+        coEvery { repo.obtenerPregunta() } returns Result.success(pregunta)
 
-        val viewModel = TriviaViewModel(triviaApi)
+        val viewModel = TriviaViewModel(repo)
 
-        assertNotNull(viewModel.pregunta.value)
-        assertEquals("Júpiter", viewModel.pregunta.value?.correctAnswer)
-        assertEquals("¿Cuál es el planeta más grande del sistema solar?", viewModel.pregunta.value?.question)
-        assertFalse(viewModel.cargando.value)
-        assertNull(viewModel.error.value)
-
-        coVerify(exactly = 1) { triviaApi.obtenerPregunta(any(), any(), any()) }
-    }
-
-    @Test
-    fun `cargarPregunta con lista vacia deja pregunta en null`() = runTest {
-        val mockResponse = TriviaResponse(
-            responseCode = 0,
-            results = emptyList()
-        )
-        coEvery { triviaApi.obtenerPregunta(any(), any(), any()) } returns mockResponse
-
-        val viewModel = TriviaViewModel(triviaApi)
-
-        assertNull(viewModel.pregunta.value)
+        assertEquals("Cóndor", viewModel.pregunta.value?.respuestaCorrecta)
         assertFalse(viewModel.cargando.value)
         assertNull(viewModel.error.value)
     }
 
     @Test
-    fun `cargarPregunta con fallo de red asigna mensaje de error apropiado`() = runTest {
-        coEvery { triviaApi.obtenerPregunta(any(), any(), any()) } throws IOException("Sin conexión")
+    fun `sin conexion muestra el mensaje de conexion`() = runTest {
+        coEvery { repo.obtenerPregunta() } returns Result.failure(ErrorRed.SinConexion())
 
-        val viewModel = TriviaViewModel(triviaApi)
+        val viewModel = TriviaViewModel(repo)
 
         assertNull(viewModel.pregunta.value)
         assertFalse(viewModel.cargando.value)
-        assertEquals("No se pudo cargar la pregunta. Verifica tu conexión a internet.", viewModel.error.value)
+        assertEquals(TriviaViewModel.MENSAJE_SIN_CONEXION, viewModel.error.value)
     }
 
     @Test
-    fun `reintento explicito de cargarPregunta vuelve a consultar API`() = runTest {
-        coEvery { triviaApi.obtenerPregunta(any(), any(), any()) } throws IOException("Error inicial")
+    fun `demasiadas consultas (429) pide esperar unos segundos`() = runTest {
+        coEvery { repo.obtenerPregunta() } returns Result.failure(ErrorRed.Http(429, null))
 
-        val viewModel = TriviaViewModel(triviaApi)
-        assertEquals("No se pudo cargar la pregunta. Verifica tu conexión a internet.", viewModel.error.value)
+        val viewModel = TriviaViewModel(repo)
 
-        val mockResponse = TriviaResponse(
-            responseCode = 0,
-            results = listOf(sampleQuestion)
+        assertEquals(
+            "Wikipedia recibió muchas consultas seguidas. Espera unos segundos y vuelve a intentarlo.",
+            viewModel.error.value
         )
-        coEvery { triviaApi.obtenerPregunta(any(), any(), any()) } returns mockResponse
+    }
 
+    @Test
+    fun `resumen vacio muestra el detalle del repositorio`() = runTest {
+        coEvery { repo.obtenerPregunta() } returns Result.failure(ErrorRed.Http(200, "Sin resumen"))
+
+        assertEquals("Sin resumen", TriviaViewModel(repo).error.value)
+    }
+
+    @Test
+    fun `reintentar despues de un error vuelve a consultar y muestra la pregunta`() = runTest {
+        coEvery { repo.obtenerPregunta() } returns Result.failure(ErrorRed.SinConexion())
+        val viewModel = TriviaViewModel(repo)
+
+        coEvery { repo.obtenerPregunta() } returns Result.success(pregunta)
         viewModel.cargarPregunta()
 
-        assertNotNull(viewModel.pregunta.value)
+        assertEquals(pregunta, viewModel.pregunta.value)
         assertNull(viewModel.error.value)
-        assertFalse(viewModel.cargando.value)
-
-        coVerify(exactly = 2) { triviaApi.obtenerPregunta(any(), any(), any()) }
+        coVerify(exactly = 2) { repo.obtenerPregunta() }
     }
 }

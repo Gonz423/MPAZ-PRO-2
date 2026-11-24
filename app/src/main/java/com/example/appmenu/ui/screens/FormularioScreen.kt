@@ -27,44 +27,31 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.appmenu.model.ActividadesManager
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.appmenu.di.AppViewModelProvider
+import com.example.appmenu.domain.model.Materias
+import com.example.appmenu.domain.model.PreguntaFormulario
 import com.example.appmenu.ui.theme.*
 import com.example.appmenu.viewmodel.FormularioViewModel
 import java.util.Date
 import java.util.Locale
 
-data class PreguntaFormulario(
-    val id: Int,
-    var enunciado: String = "",
-    var opcion1: String = "",
-    var opcion2: String = "",
-    var opcion3: String = ""
-)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FormularioScreen(
     categoriaInicial: String? = null,
-    viewModel: FormularioViewModel = viewModel()
+    viewModel: FormularioViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
     val formulario by viewModel.formulario.collectAsState()
     val errores by viewModel.errores.collectAsState()
 
-    val todasLasUnidades by ActividadesManager.unidades.collectAsState()
+    val todasLasUnidades by viewModel.unidades.collectAsStateWithLifecycle()
 
     LaunchedEffect(categoriaInicial) {
-        if (!categoriaInicial.isNullOrBlank()) {
-            val categoriaNormalizada = when {
-                categoriaInicial.contains("Lenguaje", ignoreCase = true) -> "Lenguaje y Comunicación"
-                categoriaInicial.contains("Matemática", ignoreCase = true) || categoriaInicial.contains("Matematica", ignoreCase = true) -> "Matemática"
-                categoriaInicial.contains("Ciencias", ignoreCase = true) -> "Ciencias Naturales"
-                categoriaInicial.contains("Historia", ignoreCase = true) -> "Historia y Geografía"
-                else -> categoriaInicial
-            }
-            viewModel.actualizarCategoria(categoriaNormalizada)
-        }
+        viewModel.aplicarCategoriaInicial(categoriaInicial)
     }
 
     var mostrarDatePicker by remember { mutableStateOf(false) }
@@ -82,7 +69,7 @@ fun FormularioScreen(
     )
 
     val materiaIdActual = remember(formulario.categoria) {
-        ActividadesManager.mapearCategoriaAId(formulario.categoria)
+        Materias.idDesdeCategoria(formulario.categoria)
     }
     val unidadesDeMateria = remember(todasLasUnidades, materiaIdActual) {
         todasLasUnidades.filter { it.materiaId == materiaIdActual }
@@ -98,8 +85,8 @@ fun FormularioScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(FondoApp)
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState()),
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         // encabezado de la pantalla
@@ -220,42 +207,11 @@ fun FormularioScreen(
                                 Toast.makeText(context, "¡Tarea escolar creada exitosamente!", Toast.LENGTH_SHORT).show()
                             }
                         } else {
-                            val esValido = viewModel.validarFormulario()
+                            // valida y guarda la guia (local + ms-contenidos) en el ViewModel
+                            val esValido = viewModel.guardarGuia(preguntasDinamicas.toList())
                             if (esValido) {
-                                val matId = ActividadesManager.mapearCategoriaAId(formulario.categoria)
-                                val unidadIdFinal = if (formulario.unidadId.isNotBlank()) formulario.unidadId
-                                else ActividadesManager.obtenerUnidadesPorMateria(matId).firstOrNull()?.id ?: "uni_${matId}_1"
-
-                                val paquetePreguntas = preguntasDinamicas.joinToString("|||") { p ->
-                                    val texto = p.enunciado.ifBlank { "¿Cuál es la respuesta correcta?" }
-                                    val o1 = p.opcion1.ifBlank { "Alternativa A " }
-                                    val o2 = p.opcion2.ifBlank { "Alternativa B" }
-                                    val o3 = p.opcion3.ifBlank { "Alternativa C" }
-                                    "$texto;;;$o1;;;$o2;;;$o3"
-                                }
-                                val primera = preguntasDinamicas.firstOrNull()
-                                ActividadesManager.agregarEjercicio(
-                                    materiaId = matId,
-                                    unidadId = unidadIdFinal,
-                                    titulo = formulario.nombre,
-                                    oa = formulario.descripcion,
-                                    codigoGuia = formulario.cantidad,
-                                    pregunta = paquetePreguntas,
-                                    opciones = listOf(
-                                        primera?.opcion1?.ifBlank { "Opción 1" } ?: "Opción 1",
-                                        primera?.opcion2?.ifBlank { "Opción 2" } ?: "Opción 2",
-                                        primera?.opcion3?.ifBlank { "Opción 3" } ?: "Opción 3"
-                                    ),
-                                    respuestaCorrectaIndex = 0,
-                                    disponible = formulario.activo,
-                                    esTarea = false,
-                                    fechaEntrega = formulario.fecha
-                                )
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 Toast.makeText(context, "¡Guía guardada exitosamente!", Toast.LENGTH_SHORT).show()
-                                viewModel.actualizarNombre("")
-                                viewModel.actualizarDescripcion("")
-                                viewModel.actualizarCantidad("")
                                 preguntasDinamicas.clear()
                                 preguntasDinamicas.add(PreguntaFormulario(id = 1))
                             }
@@ -293,12 +249,10 @@ fun FormularioScreen(
             onTituloChange = { nuevaUnidadTitulo = it },
             onOaChange = { nuevaUnidadOa = it },
             onCrear = {
-                if (nuevaUnidadTitulo.isBlank() || nuevaUnidadOa.isBlank()) {
-                    errorModalUnidad = "Ingrese título y objetivo de aprendizaje."
+                val error = viewModel.crearUnidad(nuevaUnidadTitulo, nuevaUnidadOa)
+                if (error != null) {
+                    errorModalUnidad = error
                 } else {
-                    val matId = ActividadesManager.mapearCategoriaAId(formulario.categoria)
-                    val nuevaUnidad = ActividadesManager.agregarUnidad(matId, nuevaUnidadTitulo, nuevaUnidadOa)
-                    viewModel.actualizarUnidadId(nuevaUnidad.id)
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     Toast.makeText(context, "¡Unidad creada y asociada!", Toast.LENGTH_SHORT).show()
                     mostrarDialogoNuevaUnidad = false
@@ -403,7 +357,7 @@ private fun SelectorAsignatura(
 @Composable
 private fun SelectorUnidad(
     formularioUnidadId: String,
-    unidadesDeMateria: List<com.example.appmenu.model.UnidadEducativa>,
+    unidadesDeMateria: List<com.example.appmenu.domain.model.UnidadEducativa>,
     unidadExpandida: Boolean,
     onExpandir: () -> Unit,
     onCerrar: () -> Unit,

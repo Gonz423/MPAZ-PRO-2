@@ -18,9 +18,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.appmenu.model.MetricaDocente
-import com.example.appmenu.model.ProgresoAsignatura
-import com.example.appmenu.model.TarjetaAsignatura
+import com.example.appmenu.ui.model.ProgresoAsignatura
+import com.example.appmenu.ui.model.TarjetaAsignatura
 import com.example.appmenu.ui.theme.GrisTexto
 import com.example.appmenu.ui.theme.TextoOscuro
 
@@ -135,41 +134,6 @@ fun TarjetaAsignaturaItem(
                     fontSize = 12.sp
                 )
             }
-        }
-    }
-}
-
-// tarjeta de metrica para panel de docentes
-
-@Composable
-fun TarjetaMetricaItem(
-    metrica: MetricaDocente,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier.height(86.dp),
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = metrica.fondoColor)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = metrica.valor,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = metrica.textoColor
-            )
-            Text(
-                text = metrica.etiqueta,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Medium,
-                color = metrica.textoColor.copy(alpha = 0.8f)
-            )
         }
     }
 }

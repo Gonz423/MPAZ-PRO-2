@@ -24,8 +24,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.appmenu.model.EjercicioEducativo
-import com.example.appmenu.room.Note
+import com.example.appmenu.domain.model.EjercicioEducativo
+import com.example.appmenu.data.local.room.Note
 import com.example.appmenu.ui.theme.*
 
 // componentes compartidos reutilizables en múltiples pantallas - mpaz pro 2.°

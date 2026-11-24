@@ -24,7 +24,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.appmenu.data.AudioHelper
+import com.example.appmenu.data.device.AudioHelper
 import com.example.appmenu.ui.theme.*
 
 // pantalla: detalle de leccion y contenido didactico mockup
@@ -79,8 +79,8 @@ fun LeccionScreen(
                 .fillMaxSize()
                 .background(FondoApp)
                 .padding(paddingValues)
-                .padding(18.dp)
-                .verticalScroll(rememberScrollState()),
+                .verticalScroll(rememberScrollState())
+                .padding(18.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // tarjeta ilustrativa del contenido

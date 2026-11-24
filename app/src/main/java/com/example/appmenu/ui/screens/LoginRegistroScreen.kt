@@ -7,6 +7,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -27,13 +30,14 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.appmenu.di.AppViewModelProvider
 import com.example.appmenu.ui.theme.*
 import com.example.appmenu.viewmodel.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginRegistroScreen(
-    authViewModel: AuthViewModel = viewModel(),
+    authViewModel: AuthViewModel = viewModel(factory = AppViewModelProvider.Factory),
     onLoginExitoso: (rol: String) -> Unit,
     onAccesoRapidoEstudiante: () -> Unit,
     onAccesoRapidoDocente: () -> Unit
@@ -46,6 +50,8 @@ fun LoginRegistroScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(FondoApp)
+            // respeta barra de estado, barra de gestos y teclado (la app es edge-to-edge)
+            .windowInsetsPadding(WindowInsets.safeDrawing)
             .padding(horizontal = 24.dp)
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally

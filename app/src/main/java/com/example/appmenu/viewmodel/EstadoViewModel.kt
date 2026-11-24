@@ -1,31 +1,29 @@
 package com.example.appmenu.viewmodel
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.appmenu.data.EstadoDataStore
+import com.example.appmenu.data.repository.PreferenciasRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-class EstadoViewModel(
-    application: Application,
-    private val repositorio: EstadoDataStore = EstadoDataStore(application)
-) : AndroidViewModel(application) {
+/** "Modo guiado con audio" del estudiante, persistido en DataStore. */
+class EstadoViewModel(private val preferencias: PreferenciasRepository) : ViewModel() {
 
     private val _estadoActivado = MutableStateFlow(false)
-    val estadoActivado = _estadoActivado.asStateFlow()
+    val estadoActivado: StateFlow<Boolean> = _estadoActivado.asStateFlow()
 
     private val _cargando = MutableStateFlow(true)
-    val cargando = _cargando.asStateFlow()
+    val cargando: StateFlow<Boolean> = _cargando.asStateFlow()
 
     private val _guardadoCorrectamente = MutableStateFlow(false)
-    val guardadoCorrectamente = _guardadoCorrectamente.asStateFlow()
+    val guardadoCorrectamente: StateFlow<Boolean> = _guardadoCorrectamente.asStateFlow()
 
     private val _mensajeError = MutableStateFlow<String?>(null)
-    val mensajeError = _mensajeError.asStateFlow()
+    val mensajeError: StateFlow<String?> = _mensajeError.asStateFlow()
 
     init {
         cargarEstado()
@@ -34,8 +32,8 @@ class EstadoViewModel(
     fun cargarEstado() {
         viewModelScope.launch {
             try {
-                delay(1000)
-                _estadoActivado.value = repositorio.estadoActivado.first()
+                delay(1000) // muestra el indicador de carga (requisito visual de la pauta)
+                _estadoActivado.value = preferencias.modoGuiadoActivado.first()
             } catch (e: Exception) {
                 _mensajeError.value = "No se pudo recuperar el estado guardado."
             } finally {
@@ -48,9 +46,8 @@ class EstadoViewModel(
         viewModelScope.launch {
             _guardadoCorrectamente.value = false
             _mensajeError.value = null
-
             try {
-                repositorio.guardarEstado(activado)
+                preferencias.guardarModoGuiado(activado)
                 _estadoActivado.value = activado
                 _guardadoCorrectamente.value = true
             } catch (e: Exception) {

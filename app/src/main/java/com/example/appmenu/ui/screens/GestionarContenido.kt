@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -12,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.People
@@ -30,8 +32,11 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.appmenu.model.ActividadesManager
-import com.example.appmenu.model.EjercicioEducativo
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.appmenu.di.AppViewModelProvider
+import com.example.appmenu.viewmodel.ContenidosViewModel
+import com.example.appmenu.domain.model.EjercicioEducativo
 import com.example.appmenu.ui.theme.*
 
 // modelo de datos para representar a los alumnos del curso
@@ -50,13 +55,22 @@ data class EstudianteCurso(
 fun GestionarContenidosScreen(
     onVolver: () -> Unit = {},
     onCrearNuevaGuia: () -> Unit = {},
-    onVerInformeEstudiante: (String) -> Unit = {}
+    onVerInformeEstudiante: (String) -> Unit = {},
+    viewModel: ContenidosViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
 
     // observamos los ejercicios y guias del sistema en tiempo real
-    val todosLosEjercicios by ActividadesManager.ejercicios.collectAsState()
+    val todosLosEjercicios by viewModel.ejercicios.collectAsStateWithLifecycle()
+
+    // guia que el docente pidio eliminar (se confirma en un dialogo)
+    var guiaPorEliminar by remember { mutableStateOf<EjercicioEducativo?>(null) }
+
+    // mensajes de una sola vez del ViewModel (resultado de ocultar / eliminar)
+    LaunchedEffect(Unit) {
+        viewModel.mensajes.collect { Toast.makeText(context, it, Toast.LENGTH_SHORT).show() }
+    }
 
     // 0: pestaña administrar guias, 1: pestaña alumnos del curso
     var tabSeleccionado by remember { mutableIntStateOf(0) }
@@ -91,6 +105,8 @@ fun GestionarContenidosScreen(
     }
 
     Scaffold(
+        // el Scaffold principal ya reserva las barras del sistema: aqui no se vuelven a sumar
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         floatingActionButton = {
             if (tabSeleccionado == 0) {
                 ExtendedFloatingActionButton(
@@ -239,13 +255,9 @@ fun GestionarContenidosScreen(
                                 cursoActivo = cursoFiltro,
                                 onToggleVisibilidad = {
                                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                    Toast.makeText(
-                                        context,
-                                        if (guia.disponibleParaEstudiantes) "Guía #${guia.codigoGuia} ocultada a estudiantes"
-                                        else "Guía #${guia.codigoGuia} activada y visible",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                }
+                                    viewModel.cambiarVisibilidad(guia)
+                                },
+                                onEliminar = { guiaPorEliminar = guia }
                             )
                         }
                     }
@@ -282,6 +294,22 @@ fun GestionarContenidosScreen(
             }
         }
     }
+
+    guiaPorEliminar?.let { guia ->
+        AlertDialog(
+            onDismissRequest = { guiaPorEliminar = null },
+            title = { Text("Eliminar guía", fontWeight = FontWeight.Bold) },
+            text = { Text("¿Eliminar la guía #${guia.codigoGuia} \"${guia.titulo}\"? Esta acción no se puede deshacer.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    viewModel.eliminarEjercicio(guia)
+                    guiaPorEliminar = null
+                }) { Text("Eliminar", color = Color(0xFFC62828), fontWeight = FontWeight.Bold) }
+            },
+            dismissButton = { TextButton(onClick = { guiaPorEliminar = null }) { Text("Cancelar") } }
+        )
+    }
 }
 
 // componente para cada guia didactica en la lista docente
@@ -289,7 +317,8 @@ fun GestionarContenidosScreen(
 private fun ItemGuiaDocente(
     guia: EjercicioEducativo,
     cursoActivo: String = "Todos",
-    onToggleVisibilidad: () -> Unit
+    onToggleVisibilidad: () -> Unit,
+    onEliminar: () -> Unit = {}
 ) {
     val colorMateria = when (guia.materiaId) {
         "matematica" -> ColorMatematica
@@ -389,13 +418,23 @@ private fun ItemGuiaDocente(
                 color = TextoOscuro
             )
 
-            // objetivo pedagogico
-            Text(
-                text = guia.objetivoAprendizaje,
-                fontSize = 12.sp,
-                color = GrisTexto,
-                maxLines = 2
-            )
+            // objetivo pedagogico + accion eliminar
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = guia.objetivoAprendizaje,
+                    fontSize = 12.sp,
+                    color = GrisTexto,
+                    maxLines = 2,
+                    modifier = Modifier.weight(1f)
+                )
+                IconButton(onClick = onEliminar) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Eliminar guía ${guia.codigoGuia}",
+                        tint = Color(0xFFC62828)
+                    )
+                }
+            }
         }
     }
 }

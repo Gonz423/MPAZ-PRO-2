@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -5,6 +7,16 @@ plugins {
     id("com.google.devtools.ksp") version "2.0.21-1.0.28"
     id("jacoco")
 }
+
+// IP del computador que ejecuta los microservicios. Se configura en local.properties (no se sube a git):
+//   backend.host=192.168.1.50   -> celular fisico en la misma red wifi
+// Si no se define, se usa 10.0.2.2, que en el emulador de Android apunta al localhost del computador.
+val localProps = Properties().apply {
+    val archivo = rootProject.file("local.properties")
+    if (archivo.exists()) archivo.inputStream().use { load(it) }
+}
+val backendHost: String = providers.gradleProperty("backend.host").orNull   // ./gradlew ... -Pbackend.host=10.0.2.2
+    ?: localProps.getProperty("backend.host", "10.0.2.2")
 
 android {
     namespace = "com.example.appmenu"
@@ -18,6 +30,13 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // URLs de los microservicios propios (capa data/remote/backend)
+        buildConfigField("String", "URL_USUARIOS", "\"http://$backendHost:8081/\"")
+        buildConfigField("String", "URL_CONTENIDOS", "\"http://$backendHost:8082/\"")
+        buildConfigField("String", "URL_PROGRESO", "\"http://$backendHost:8083/\"")
+        // URL de la API externa (capa data/remote/external), aislada de la anterior: Wikipedia en español
+        buildConfigField("String", "URL_WIKIPEDIA", "\"https://es.wikipedia.org/\"")
     }
 
     buildTypes {
@@ -41,6 +60,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -63,6 +83,8 @@ dependencies {
     implementation("androidx.datastore:datastore-preferences:1.1.1")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
+    implementation("androidx.navigation:navigation-compose:2.8.4")
     implementation("androidx.biometric:biometric:1.2.0-alpha05")
 
     testImplementation(libs.junit)

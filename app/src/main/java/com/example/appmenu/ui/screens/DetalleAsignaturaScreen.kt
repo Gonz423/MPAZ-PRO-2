@@ -39,10 +39,13 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.appmenu.model.ActividadesManager
-import com.example.appmenu.model.ConfiguracionEducativa
-import com.example.appmenu.model.EjercicioEducativo
-import com.example.appmenu.model.UnidadEducativa
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.appmenu.di.AppViewModelProvider
+import com.example.appmenu.viewmodel.ContenidosViewModel
+import com.example.appmenu.ui.model.ConfiguracionEducativa
+import com.example.appmenu.domain.model.EjercicioEducativo
+import com.example.appmenu.domain.model.UnidadEducativa
 import com.example.appmenu.ui.componentes.TarjetaEjercicioItem
 import com.example.appmenu.ui.theme.*
 
@@ -56,7 +59,8 @@ fun DetalleAsignaturaScreen(
     onVolver: () -> Unit,
     onNavegarFormulario: (String) -> Unit = {},
     onAbrirLeccion: (String, String) -> Unit = { _, _ -> },
-    onAbrirActividad: (String) -> Unit = {}
+    onAbrirActividad: (String) -> Unit = {},
+    viewModel: ContenidosViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
@@ -65,8 +69,8 @@ fun DetalleAsignaturaScreen(
         it.id.equals(materiaId, ignoreCase = true)
     } ?: ConfiguracionEducativa.asignaturas.first()
 
-    val todasLasUnidades by ActividadesManager.unidades.collectAsState()
-    val todosLosEjercicios by ActividadesManager.ejercicios.collectAsState()
+    val todasLasUnidades by viewModel.unidades.collectAsStateWithLifecycle()
+    val todosLosEjercicios by viewModel.ejercicios.collectAsStateWithLifecycle()
 
     val unidadesMateria = remember(todasLasUnidades, materiaId) {
         todasLasUnidades.filter { it.materiaId.equals(materiaId, ignoreCase = true) }
@@ -206,7 +210,7 @@ fun DetalleAsignaturaScreen(
                     onRealizarActividad = { id -> onAbrirActividad(id) },
                     onToggleCompletado = { ejercicio ->
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        ActividadesManager.alternarCompletado(ejercicio.id)
+                        viewModel.alternarCompletado(ejercicio.id)
                         val nuevoEstado = !ejercicio.completado
                         Toast.makeText(
                             context,
@@ -230,14 +234,10 @@ fun DetalleAsignaturaScreen(
             onTituloChange = { nuevaUnidadTitulo = it },
             onOaChange = { nuevaUnidadOa = it },
             onCrear = {
-                if (nuevaUnidadTitulo.isBlank() || nuevaUnidadOa.isBlank()) {
-                    errorModal = "Debes ingresar título y objetivo de aprendizaje."
+                val error = viewModel.crearUnidad(materiaId, nuevaUnidadTitulo, nuevaUnidadOa)
+                if (error != null) {
+                    errorModal = error
                 } else {
-                    ActividadesManager.agregarUnidad(
-                        materiaId = materiaId,
-                        titulo = nuevaUnidadTitulo,
-                        oa = nuevaUnidadOa
-                    )
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     Toast.makeText(context, "¡Nueva unidad creada exitosamente!", Toast.LENGTH_SHORT).show()
                     mostrarDialogoNuevaUnidad = false
@@ -261,19 +261,16 @@ fun DetalleAsignaturaScreen(
             onCodigoChange = { if (it.all { c -> c.isDigit() }) nuevoEjercicioCodigo = it },
             onUnidadChange = { unidadSeleccionadaId = it },
             onGuardar = {
-                if (nuevoEjercicioTitulo.isBlank() || nuevoEjercicioOa.isBlank()) {
-                    errorModal = "Debes ingresar título y objetivo de aprendizaje."
-                } else if (unidadSeleccionadaId.isBlank()) {
-                    errorModal = "Debes seleccionar una unidad asociada."
+                val error = viewModel.crearEjercicio(
+                    materiaId = materiaId,
+                    unidadId = unidadSeleccionadaId,
+                    titulo = nuevoEjercicioTitulo,
+                    oa = nuevoEjercicioOa,
+                    codigo = nuevoEjercicioCodigo
+                )
+                if (error != null) {
+                    errorModal = error
                 } else {
-                    val cod = if (nuevoEjercicioCodigo.isBlank()) "100" + (1..9).random() else nuevoEjercicioCodigo
-                    ActividadesManager.agregarEjercicio(
-                        materiaId = materiaId,
-                        unidadId = unidadSeleccionadaId,
-                        titulo = nuevoEjercicioTitulo,
-                        oa = nuevoEjercicioOa,
-                        codigoGuia = cod
-                    )
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     Toast.makeText(context, "¡Actividad agregada a la unidad!", Toast.LENGTH_SHORT).show()
                     mostrarDialogoNuevoEjercicio = false
@@ -289,7 +286,7 @@ fun DetalleAsignaturaScreen(
 // banner superior: identidad de la asignatura + barra de progreso + botones docente
 @Composable
 private fun BannerAsignatura(
-    asignatura: com.example.appmenu.model.TarjetaAsignatura,
+    asignatura: com.example.appmenu.ui.model.TarjetaAsignatura,
     esDocente: Boolean,
     ejerciciosCompletados: Int,
     totalEjercicios: Int,

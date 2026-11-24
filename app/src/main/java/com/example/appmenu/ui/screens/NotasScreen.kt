@@ -28,7 +28,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.appmenu.room.Note
+import com.example.appmenu.data.local.room.Note
+import com.example.appmenu.di.AppViewModelProvider
 import com.example.appmenu.ui.componentes.ItemNotaCard
 import com.example.appmenu.ui.theme.*
 import com.example.appmenu.viewmodel.NotasViewModel
@@ -38,7 +39,7 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun NotasScreen(
-    viewModel: NotasViewModel = viewModel(),
+    viewModel: NotasViewModel = viewModel(factory = AppViewModelProvider.Factory),
     onVolver: (() -> Unit)? = null
 ) {
     var title by remember { mutableStateOf("") }
@@ -77,12 +78,16 @@ fun NotasScreen(
         }
     }
 
-    Column(
+    // toda la pantalla desplaza junta: formulario, buscador y registros
+    LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(FondoApp)
-            .padding(16.dp)
+            .background(FondoApp),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
+      item {
+       Column {
         // cabecera
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -252,52 +257,41 @@ fun NotasScreen(
         }
         Spacer(Modifier.height(6.dp))
 
+       }
+      }
+
         // lista reactiva de room
         if (notes.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                contentAlignment = Alignment.Center
-            ) {
+            item {
                 Text(
                     text = "Aún no hay registros en la base de datos.\nIngresa el primero con el formulario de arriba.",
                     color = GrisTexto,
                     fontSize = 14.sp,
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp)
                 )
             }
         } else if (notasFiltradas.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                contentAlignment = Alignment.Center
-            ) {
+            item {
                 Text(
                     text = "No se encontraron coincidencias para \"$filtroBusqueda\".",
                     color = GrisTexto,
-                    fontSize = 14.sp
+                    fontSize = 14.sp,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp)
                 )
             }
         } else {
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-            ) {
-                items(items = notasFiltradas, key = { it.id }) { note ->
-                    ItemNotaCard(
-                        note = note,
-                        onEliminar = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            viewModel.eliminarNota(note)
-                            message = "Registro eliminado correctamente."
-                        }
-                    )
-                }
+            items(items = notasFiltradas, key = { it.id }) { note ->
+                ItemNotaCard(
+                    note = note,
+                    onEliminar = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        viewModel.eliminarNota(note)
+                        message = "Registro eliminado correctamente."
+                    }
+                )
             }
         }
     }
-}
+}

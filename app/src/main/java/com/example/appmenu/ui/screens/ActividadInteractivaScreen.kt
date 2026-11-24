@@ -28,30 +28,27 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.appmenu.model.ActividadesManager
-import com.example.appmenu.network.BackendClient
-import com.example.appmenu.network.ResultadoDto
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.appmenu.di.AppViewModelProvider
 import com.example.appmenu.ui.theme.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import com.example.appmenu.viewmodel.ActividadViewModel
+import com.example.appmenu.viewmodel.RespuestaActividad
 
 // PANTALLA: ACTIVIDAD DIDACTICA INTERACTIVA Y FEEDBACK
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ActividadInteractivaScreen(
-    ejercicioId: String? = null,
+    viewModel: ActividadViewModel = viewModel(factory = AppViewModelProvider.Factory),
     onVolver: () -> Unit = {},
-    onFinalizarActividad: () -> Unit = {}
+    /** Recibe aciertos y total de intentos para la pantalla de feedback. */
+    onFinalizarActividad: (aciertos: Int, total: Int) -> Unit = { _, _ -> }
 ) {
     val haptic = LocalHapticFeedback.current
-    val todosLosEjercicios by ActividadesManager.ejercicios.collectAsState()
-
-    // Buscar el ejercicio activo
-    val ejercicio = remember(todosLosEjercicios, ejercicioId) {
-        todosLosEjercicios.find { it.id == ejercicioId } ?: todosLosEjercicios.firstOrNull()
-    }
+    // el ejercicio y el estado de la respuesta vienen del ViewModel
+    val ejercicio by viewModel.ejercicio.collectAsStateWithLifecycle()
+    val estado by viewModel.uiState.collectAsStateWithLifecycle()
 
     val colorMateria = when (ejercicio?.materiaId) {
         "matematica" -> ColorMatematica
@@ -60,9 +57,9 @@ fun ActividadInteractivaScreen(
         else         -> ColorLenguaje
     }
 
-    var opcionSeleccionada by remember { mutableStateOf<Int?>(null) }
-    var mostrarExito by remember { mutableStateOf(false) }
-    var mensajeError by remember { mutableStateOf<String?>(null) }
+    val opcionSeleccionada = estado.opcionSeleccionada
+    val mostrarExito = estado.mostrarExito
+    val mensajeError = estado.mensajeError
 
     Scaffold(
         topBar = {
@@ -99,8 +96,8 @@ fun ActividadInteractivaScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(18.dp)
-                    .verticalScroll(rememberScrollState()),
+                    .verticalScroll(rememberScrollState())
+                    .padding(18.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 // Barra de progreso de la actividad
@@ -162,8 +159,7 @@ fun ActividadInteractivaScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
-                                    opcionSeleccionada = index
-                                    mensajeError = null
+                                    viewModel.seleccionarOpcion(index)
                                 }
                                 .border(
                                     width = if (seleccionado) 2.dp else 1.dp,
@@ -185,8 +181,7 @@ fun ActividadInteractivaScreen(
                                 RadioButton(
                                     selected = seleccionado,
                                     onClick = {
-                                        opcionSeleccionada = index
-                                        mensajeError = null
+                                        viewModel.seleccionarOpcion(index)
                                     },
                                     colors = RadioButtonDefaults.colors(selectedColor = colorMateria)
                                 )
@@ -225,39 +220,10 @@ fun ActividadInteractivaScreen(
                 // BOTON DE RESPUESTA
                 Button(
                     onClick = {
-                        if (opcionSeleccionada == null) {
-                            mensajeError = "Por favor selecciona una alternativa antes de responder."
-                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                        } else {
-                            val indiceCorrecto = ejercicio?.respuestaCorrectaIndex ?: 0
-                            if (opcionSeleccionada == indiceCorrecto) {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                mensajeError = null
-                                ejercicio?.let { ej ->
-                                    ActividadesManager.marcarCompletado(ej.id, 10)
-                                    // Sincronizacion HTTP con microservicio ms-progreso
-                                    CoroutineScope(Dispatchers.IO).launch {
-                                        try {
-                                            BackendClient.progresoApi.registrarResultado(
-                                                ResultadoDto(
-                                                    estudianteId = 1L,
-                                                    ejercicioId = (ej.codigoGuia.toLongOrNull() ?: ej.id.hashCode().toLong()).coerceAtLeast(1L),
-                                                    nota = 10,
-                                                    aciertos = 1,
-                                                    totalPreguntas = 1,
-                                                    materiaId = ej.materiaId
-                                                )
-                                            )
-                                        } catch (_: Exception) {
-                                            // Fallback local seguro si el microservicio esta apagado
-                                        }
-                                    }
-                                }
-                                mostrarExito = true
-                            } else {
-                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                mensajeError = "¡Casi! Revisa bien la pregunta e inténtalo otra vez."
-                            }
+                        // la validacion y el registro del resultado los hace el ViewModel
+                        when (viewModel.responder()) {
+                            RespuestaActividad.CORRECTA -> haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            else -> haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                         }
                     },
                     modifier = Modifier
@@ -322,8 +288,8 @@ fun ActividadInteractivaScreen(
                     confirmButton = {
                         Button(
                             onClick = {
-                                mostrarExito = false
-                                onFinalizarActividad()
+                                viewModel.cerrarExito()
+                                onFinalizarActividad(1, estado.intentos.coerceAtLeast(1))
                             },
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),

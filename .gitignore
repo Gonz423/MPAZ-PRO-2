@@ -17,3 +17,12 @@ local.properties
 **/target/
 target/
 *.class
+
+# Firma del APK: la clave y sus contrasenas nunca se suben al repositorio
+*.jks
+*.keystore
+keystore.properties
+/app/release/
+
+# Cache del compilador de Kotlin
+.kotlin/

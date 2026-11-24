@@ -29,78 +29,51 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import com.example.appmenu.data.SessionManager
-import com.example.appmenu.data.UsuarioSesion
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.appmenu.di.AppViewModelProvider
+import com.example.appmenu.viewmodel.ContenidosViewModel
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.appmenu.model.ActividadesManager
-import com.example.appmenu.model.ConfiguracionEducativa
+import com.example.appmenu.ui.model.ConfiguracionEducativa
 import com.example.appmenu.ui.componentes.BannerSaludoEstudiante
 import com.example.appmenu.ui.componentes.TarjetaAsignaturaItem
 import com.example.appmenu.ui.theme.*
 import com.example.appmenu.viewmodel.EstadoViewModel
 import kotlinx.coroutines.delay
 
-// pantalla principal del estudiante (dashboard con asignaturas y asistencia de lectura)
+// pantalla principal del estudiante (tarea del dia, asignaturas y desafio cientifico)
 
 @Composable
 fun EstudianteScreen(
-    estadoViewModel: EstadoViewModel = viewModel(),
     onSeleccionarAsignatura: (String) -> Unit = {},
     onAbrirTarea: (String) -> Unit = {},
-    onNavegarTrivia: () -> Unit = {}
+    onNavegarTrivia: () -> Unit = {},
+    contenidosViewModel: ContenidosViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val context = LocalContext.current
 
-    // estados del viewmodel
-    val estadoGuardado by estadoViewModel.estadoActivado.collectAsState()
-    val cargando by estadoViewModel.cargando.collectAsState()
-    val guardadoCorrectamente by estadoViewModel.guardadoCorrectamente.collectAsState()
-    val mensajeError by estadoViewModel.mensajeError.collectAsState()
-
-    val sesion by SessionManager.getInstance(context).sesionFlow.collectAsState(initial = UsuarioSesion())
+    val sesion by contenidosViewModel.sesion.collectAsStateWithLifecycle()
     val nombreEstudiante = if (sesion.estaAutenticado && sesion.nombreCompleto.isNotBlank()) {
         sesion.nombreCompleto.split(" ").firstOrNull() ?: sesion.nombreCompleto
     } else {
         "Martina"
     }
 
-    var estadoActivado by rememberSaveable { mutableStateOf(false) }
-
-    val todosLosEjercicios by ActividadesManager.ejercicios.collectAsState()
+    val todosLosEjercicios by contenidosViewModel.ejercicios.collectAsStateWithLifecycle()
     val tareaLen2Completada = remember(todosLosEjercicios) {
         todosLosEjercicios.find { it.id == "len_2" }?.completado == true
     }
-
-    LaunchedEffect(cargando, estadoGuardado) {
-        if (!cargando) {
-            estadoActivado = estadoGuardado
-        }
-    }
-
-    LaunchedEffect(guardadoCorrectamente) {
-        if (guardadoCorrectamente) {
-            delay(2000)
-            estadoViewModel.ocultarMensajeGuardado()
-        }
-    }
-
-    // color animado para el boton de modo guiado
-    val colorBotonModo by animateColorAsState(
-        targetValue = if (estadoActivado) Color(0xFF2E7D32) else AzulBarraSuperior,
-        label = "ColorBotonModo"
-    )
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(FondoApp)
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState()),
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // banner de saludo
@@ -317,96 +290,6 @@ fun EstudianteScreen(
         }
         // ===================== FIN DESAFÍO CIENTÍFICO =================
 
-        // control apoyo didactico
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = BlancoTarjeta),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = if (estadoActivado) Icons.Default.Hearing else Icons.Default.MenuBook,
-                        contentDescription = null,
-                        tint = if (estadoActivado) Color(0xFF2E7D32) else AzulBarraSuperior
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Lectura Guiada y Apoyo con Audio",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = TextoOscuro
-                    )
-                }
-
-                Text(
-                    text = if (estadoActivado) {
-                        "Modo Asistido ACTIVO: Instrucciones habladas y apoyos visuales activados para 2.° Básico."
-                    } else {
-                        "Modo Estándar: Lectura directa sin asistencia sonora."
-                    },
-                    fontSize = 13.sp,
-                    color = GrisTexto
-                )
-
-                Button(
-                    onClick = {
-                        val nuevoEstado = !estadoActivado
-                        estadoActivado = nuevoEstado
-                        estadoViewModel.guardarEstado(nuevoEstado)
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = colorBotonModo),
-                    shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = if (estadoActivado) "Desactivar Asistencia" else "Activar Asistencia Guiada",
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                AnimatedVisibility(
-                    visible = guardadoCorrectamente,
-                    enter = fadeIn() + expandVertically(),
-                    exit = fadeOut() + shrinkVertically()
-                ) {
-                    Text(
-                        text = "¡Preferencia guardada en el dispositivo!",
-                        color = Color(0xFF2E7D32),
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-
-                AnimatedVisibility(
-                    visible = mensajeError != null,
-                    enter = fadeIn(),
-                    exit = fadeOut()
-                ) {
-                    Text(
-                        text = mensajeError ?: "",
-                        color = MaterialTheme.colorScheme.error,
-                        fontSize = 13.sp
-                    )
-                }
-            }
-        }
     }
 }
 
-// compatibilidad hacia atras por si se llama con el nombre antiguo
-@Composable
-fun PantallaPrincipal(
-    estadoViewModel: EstadoViewModel = viewModel(),
-    onSeleccionarAsignatura: (String) -> Unit = {}
-) {
-    EstudianteScreen(estadoViewModel, onSeleccionarAsignatura)
-}

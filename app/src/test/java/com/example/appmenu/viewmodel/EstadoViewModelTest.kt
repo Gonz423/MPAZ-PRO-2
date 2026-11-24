@@ -1,7 +1,6 @@
 package com.example.appmenu.viewmodel
 
-import android.app.Application
-import com.example.appmenu.data.EstadoDataStore
+import com.example.appmenu.data.repository.PreferenciasRepository
 import com.example.appmenu.util.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -25,14 +24,13 @@ class EstadoViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val application: Application = mockk(relaxed = true)
-    private val dataStore: EstadoDataStore = mockk()
+    private val dataStore: PreferenciasRepository = mockk()
 
     @Test
     fun `cargarEstado exitoso actualiza estadoActivado a true y desactiva cargando`() = runTest {
-        every { dataStore.estadoActivado } returns flowOf(true)
+        every { dataStore.modoGuiadoActivado } returns flowOf(true)
 
-        val viewModel = EstadoViewModel(application, dataStore)
+        val viewModel = EstadoViewModel(dataStore)
         advanceUntilIdle()
 
         assertTrue(viewModel.estadoActivado.value)
@@ -42,9 +40,9 @@ class EstadoViewModelTest {
 
     @Test
     fun `cargarEstado con excepcion asigna mensaje de error y desactiva cargando`() = runTest {
-        every { dataStore.estadoActivado } returns flow { throw RuntimeException("Error en DataStore") }
+        every { dataStore.modoGuiadoActivado } returns flow { throw RuntimeException("Error en DataStore") }
 
-        val viewModel = EstadoViewModel(application, dataStore)
+        val viewModel = EstadoViewModel(dataStore)
         advanceUntilIdle()
 
         assertFalse(viewModel.estadoActivado.value)
@@ -54,10 +52,10 @@ class EstadoViewModelTest {
 
     @Test
     fun `guardarEstado exitoso persiste el valor y marca guardadoCorrectamente en true`() = runTest {
-        every { dataStore.estadoActivado } returns flowOf(false)
-        coEvery { dataStore.guardarEstado(true) } returns Unit
+        every { dataStore.modoGuiadoActivado } returns flowOf(false)
+        coEvery { dataStore.guardarModoGuiado(true) } returns Unit
 
-        val viewModel = EstadoViewModel(application, dataStore)
+        val viewModel = EstadoViewModel(dataStore)
         advanceUntilIdle()
         assertFalse(viewModel.estadoActivado.value)
 
@@ -68,15 +66,15 @@ class EstadoViewModelTest {
         assertTrue(viewModel.guardadoCorrectamente.value)
         assertNull(viewModel.mensajeError.value)
 
-        coVerify(exactly = 1) { dataStore.guardarEstado(true) }
+        coVerify(exactly = 1) { dataStore.guardarModoGuiado(true) }
     }
 
     @Test
     fun `guardarEstado con fallo asigna mensaje de error`() = runTest {
-        every { dataStore.estadoActivado } returns flowOf(false)
-        coEvery { dataStore.guardarEstado(true) } throws RuntimeException("Fallo de escritura")
+        every { dataStore.modoGuiadoActivado } returns flowOf(false)
+        coEvery { dataStore.guardarModoGuiado(true) } throws RuntimeException("Fallo de escritura")
 
-        val viewModel = EstadoViewModel(application, dataStore)
+        val viewModel = EstadoViewModel(dataStore)
         advanceUntilIdle()
 
         viewModel.guardarEstado(true)
@@ -88,10 +86,10 @@ class EstadoViewModelTest {
 
     @Test
     fun `ocultarMensajeGuardado cambia guardadoCorrectamente a false`() = runTest {
-        every { dataStore.estadoActivado } returns flowOf(false)
-        coEvery { dataStore.guardarEstado(true) } returns Unit
+        every { dataStore.modoGuiadoActivado } returns flowOf(false)
+        coEvery { dataStore.guardarModoGuiado(true) } returns Unit
 
-        val viewModel = EstadoViewModel(application, dataStore)
+        val viewModel = EstadoViewModel(dataStore)
         advanceUntilIdle()
         viewModel.guardarEstado(true)
         advanceUntilIdle()

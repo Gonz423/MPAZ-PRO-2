@@ -32,9 +32,9 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
-import com.example.appmenu.data.CamaraUriFactory
-import com.example.appmenu.data.SessionManager
-import com.example.appmenu.data.UsuarioSesion
+import com.example.appmenu.data.device.CamaraUriFactory
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.appmenu.di.AppViewModelProvider
 import com.example.appmenu.ui.componentes.FilaDatoPerfil
 import com.example.appmenu.ui.componentes.ImagenInteligente
 import com.example.appmenu.ui.theme.*
@@ -46,14 +46,12 @@ import com.example.appmenu.viewmodel.PerfilViewModel
 @Composable
 fun PerfilScreen(
     esDocente: Boolean = false,
-    perfilViewModel: PerfilViewModel = viewModel(),
-    estadoViewModel: EstadoViewModel = viewModel(),
+    perfilViewModel: PerfilViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    estadoViewModel: EstadoViewModel = viewModel(factory = AppViewModelProvider.Factory),
     onCerrarSesion: () -> Unit = {}
 ) {
     val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
-    val sessionManager = remember { SessionManager.getInstance(context) }
-    val sesion by sessionManager.sesionFlow.collectAsState(initial = UsuarioSesion())
+    val sesion by perfilViewModel.sesion.collectAsStateWithLifecycle()
     val imagenUri by perfilViewModel.imagenUri.collectAsState()
 
     // configuracion desde datastore
@@ -119,8 +117,8 @@ fun PerfilScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(FondoApp)
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState()),
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -285,10 +283,7 @@ fun PerfilScreen(
         // boton cerrar sesion / cambiar de perfil
         OutlinedButton(
             onClick = {
-                coroutineScope.launch {
-                    sessionManager.cerrarSesion()
-                    onCerrarSesion()
-                }
+                perfilViewModel.cerrarSesion(onListo = onCerrarSesion)
             },
             modifier = Modifier
                 .fillMaxWidth()

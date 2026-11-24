@@ -1,9 +1,10 @@
 package com.example.appmenu.viewmodel
 
-import android.app.Application
-import com.example.appmenu.network.ProgresoApiService
-import com.example.appmenu.room.Note
-import com.example.appmenu.room.NoteRepository
+import com.example.appmenu.data.local.room.Note
+import com.example.appmenu.data.repository.AuthRepository
+import com.example.appmenu.data.repository.NotasRepository
+import com.example.appmenu.data.repository.ProgresoRepository
+import com.example.appmenu.domain.model.UsuarioSesion
 import com.example.appmenu.util.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -28,18 +29,19 @@ class NotasViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val application: Application = mockk(relaxed = true)
-    private val repository: NoteRepository = mockk(relaxed = true)
-    private val progresoApi: ProgresoApiService = mockk(relaxed = true)
+    private val repository: NotasRepository = mockk(relaxed = true)
+    private val progreso: ProgresoRepository = mockk(relaxed = true)
+    private val auth: AuthRepository = mockk(relaxed = true)
 
     @Before
     fun setUp() {
-        every { repository.notes } returns flowOf(emptyList())
+        every { repository.notas } returns flowOf(emptyList())
+        every { auth.sesion } returns flowOf(UsuarioSesion())
     }
 
     @Test
     fun `validar con campos vacios retorna false y asigna mensajes de error`() {
-        val viewModel = NotasViewModel(application, repository, progresoApi)
+        val viewModel = NotasViewModel(repository, progreso, auth)
 
         val resultado = viewModel.validar("", "")
 
@@ -50,7 +52,7 @@ class NotasViewModelTest {
 
     @Test
     fun `validar con campos cortos retorna false y asigna mensajes de longitud minima`() {
-        val viewModel = NotasViewModel(application, repository, progresoApi)
+        val viewModel = NotasViewModel(repository, progreso, auth)
 
         val resultado = viewModel.validar("Ab", "Hola")
 
@@ -61,7 +63,7 @@ class NotasViewModelTest {
 
     @Test
     fun `validar con datos correctos retorna true y sin errores`() {
-        val viewModel = NotasViewModel(application, repository, progresoApi)
+        val viewModel = NotasViewModel(repository, progreso, auth)
 
         val resultado = viewModel.validar("Mateo Silva", "Excelente participación en clase de Ciencias")
 
@@ -72,7 +74,7 @@ class NotasViewModelTest {
 
     @Test
     fun `limpiarErrorTitulo y limpiarErrorContenido limpian errores de forma independiente`() {
-        val viewModel = NotasViewModel(application, repository, progresoApi)
+        val viewModel = NotasViewModel(repository, progreso, auth)
         viewModel.validar("", "")
 
         assertNotNull(viewModel.errores.value.titulo)
@@ -88,7 +90,7 @@ class NotasViewModelTest {
 
     @Test
     fun `limpiarErrores restablece todos los errores a null`() {
-        val viewModel = NotasViewModel(application, repository, progresoApi)
+        val viewModel = NotasViewModel(repository, progreso, auth)
         viewModel.validar("", "")
 
         assertNotNull(viewModel.errores.value.titulo)
@@ -101,7 +103,7 @@ class NotasViewModelTest {
 
     @Test
     fun `guardarNota con datos invalidos no invoca repositorio y reporta fallo en callback`() {
-        val viewModel = NotasViewModel(application, repository, progresoApi)
+        val viewModel = NotasViewModel(repository, progreso, auth)
         var exitoCallback = false
         var mensajeCallback = ""
 
@@ -112,13 +114,13 @@ class NotasViewModelTest {
 
         assertFalse(exitoCallback)
         assertEquals("Por favor corrige los campos con error.", mensajeCallback)
-        coVerify(exactly = 0) { repository.save(any(), any()) }
+        coVerify(exactly = 0) { repository.guardar(any(), any()) }
     }
 
     @Test
     fun `guardarNota con datos validos persiste en repositorio y reporta exito`() = runTest {
-        coEvery { repository.save(any(), any()) } returns Unit
-        val viewModel = NotasViewModel(application, repository, progresoApi)
+        coEvery { repository.guardar(any(), any()) } returns Unit
+        val viewModel = NotasViewModel(repository, progreso, auth)
         var exitoCallback = false
         var mensajeCallback = ""
 
@@ -130,18 +132,18 @@ class NotasViewModelTest {
 
         assertTrue(exitoCallback)
         assertEquals("Registro guardado correctamente en la base de datos.", mensajeCallback)
-        coVerify(exactly = 1) { repository.save("Lenguaje y Comunicación", "Comprensión de lectura evaluada con 100%") }
+        coVerify(exactly = 1) { repository.guardar("Lenguaje y Comunicación", "Comprensión de lectura evaluada con 100%") }
     }
 
     @Test
     fun `eliminarNota delega en repositorio delete con la nota entregada`() = runTest {
         val nota = Note(id = 5, title = "Tarea Matemática", content = "Completada")
-        coEvery { repository.delete(nota) } returns Unit
+        coEvery { repository.eliminar(nota) } returns Unit
 
-        val viewModel = NotasViewModel(application, repository, progresoApi)
+        val viewModel = NotasViewModel(repository, progreso, auth)
         viewModel.eliminarNota(nota)
         advanceUntilIdle()
 
-        coVerify(exactly = 1) { repository.delete(nota) }
+        coVerify(exactly = 1) { repository.eliminar(nota) }
     }
 }
