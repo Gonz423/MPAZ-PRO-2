@@ -109,29 +109,60 @@ dependencies {
 
 }
 
+// ---------------- Cobertura (JaCoCo) ----------------
+// Las pruebas unitarias cubren la logica: ViewModels, Repositories, DataSources, red y modelos.
+// Se excluye lo que solo se puede probar en un dispositivo/emulador (pruebas instrumentadas):
+// pantallas y componentes Compose, tema, navegacion, inyeccion de dependencias, Room, DataStore,
+// camara/audio/biometria y la construccion de los clientes Retrofit. Tambien los DTO e interfaces
+// Retrofit, que no tienen logica.
+val coberturaExclusiones = listOf(
+    "**/R.class", "**/R$*.class", "**/BuildConfig.*", "**/Manifest*.*", "**/*Test*.*", "android/**/*.*",
+    "**/ui/**", "**/di/**", "**/MainActivity*", "**/MpazApplication*",
+    "**/data/device/**", "**/data/local/room/**", "**/data/local/SessionManager*", "**/data/local/EstadoDataStore*",
+    "**/data/repository/FotoPerfilRepositoryImpl*",
+    "**/data/remote/backend/BackendRetrofit*", "**/data/remote/external/ExternalRetrofit*",
+    "**/dto/**", "**/data/remote/backend/api/**", "**/data/remote/external/WikipediaApi*"
+)
+val coberturaClases = fileTree("${layout.buildDirectory.get().asFile}/intermediates/javac/debug") {
+    exclude(coberturaExclusiones)
+} + fileTree("${layout.buildDirectory.get().asFile}/tmp/kotlin-classes/debug") {
+    exclude(coberturaExclusiones)
+}
+val coberturaEjecucion = fileTree(layout.buildDirectory.get().asFile) {
+    include(
+        "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec",
+        "jacoco/testDebugUnitTest.exec"
+    )
+}
+
+// ./gradlew jacocoTestReport -> app/build/reports/jacoco/jacocoTestReport/html/index.html
 tasks.register<JacocoReport>("jacocoTestReport") {
     dependsOn("testDebugUnitTest")
     reports {
         xml.required.set(true)
         html.required.set(true)
     }
-    val fileFilter = listOf(
-        "**/R.class", "**/R$*.class", "**/BuildConfig.*", "**/Manifest*.*",
-        "**/*Test*.*", "android/**/*.*"
-    )
-    val debugTree = fileTree("${layout.buildDirectory.get().asFile}/intermediates/javac/debug") {
-        exclude(fileFilter)
-    } + fileTree("${layout.buildDirectory.get().asFile}/tmp/kotlin-classes/debug") {
-        exclude(fileFilter)
-    }
-    val mainSrc = "${project.projectDir}/src/main/java"
-
-    sourceDirectories.setFrom(files(mainSrc))
-    classDirectories.setFrom(files(debugTree))
-    executionData.setFrom(fileTree(layout.buildDirectory.get().asFile) {
-        include(
-            "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec",
-            "jacoco/testDebugUnitTest.exec"
-        )
-    })
+    sourceDirectories.setFrom(files("${project.projectDir}/src/main/java"))
+    classDirectories.setFrom(files(coberturaClases))
+    executionData.setFrom(coberturaEjecucion)
 }
+
+// ./gradlew jacocoTestCoverageVerification -> falla si la cobertura de lineas baja del 80%
+tasks.register<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
+    dependsOn("jacocoTestReport")
+    sourceDirectories.setFrom(files("${project.projectDir}/src/main/java"))
+    classDirectories.setFrom(files(coberturaClases))
+    executionData.setFrom(coberturaEjecucion)
+    violationRules {
+        rule {
+            limit {
+                counter = "LINE"
+                value = "COVEREDRATIO"
+                minimum = "0.80".toBigDecimal()
+            }
+        }
+    }
+}
+
+// "gradlew check" tambien exige el minimo de cobertura, igual que "mvnw verify" en el backend
+tasks.named("check") { dependsOn("jacocoTestCoverageVerification") }
