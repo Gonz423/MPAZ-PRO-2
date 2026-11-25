@@ -46,6 +46,17 @@ fun LoginRegistroScreen(
     var tabSeleccionado by remember { mutableIntStateOf(0) } // 0 = Iniciar Sesion, 1 = Registrarse
     var passwordVisible by remember { mutableStateOf(false) }
 
+    // Texto negro en los campos: con el tema oscuro del sistema salia blanco sobre la tarjeta blanca
+    val coloresCampo = OutlinedTextFieldDefaults.colors(
+        focusedTextColor = Color.Black,
+        unfocusedTextColor = Color.Black,
+        cursorColor = Color.Black,
+        focusedLabelColor = AzulBarraSuperior,
+        unfocusedLabelColor = GrisTexto,
+        focusedPlaceholderColor = GrisTexto,
+        unfocusedPlaceholderColor = GrisTexto
+    )
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -179,6 +190,7 @@ fun LoginRegistroScreen(
                         },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                        colors = coloresCampo,
                         shape = RoundedCornerShape(14.dp),
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -212,6 +224,7 @@ fun LoginRegistroScreen(
                         },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        colors = coloresCampo,
                         shape = RoundedCornerShape(14.dp),
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -356,6 +369,7 @@ fun LoginRegistroScreen(
                             }
                         },
                         singleLine = true,
+                        colors = coloresCampo,
                         shape = RoundedCornerShape(14.dp),
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -379,6 +393,7 @@ fun LoginRegistroScreen(
                         },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                        colors = coloresCampo,
                         shape = RoundedCornerShape(14.dp),
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -412,6 +427,7 @@ fun LoginRegistroScreen(
                         },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        colors = coloresCampo,
                         shape = RoundedCornerShape(14.dp),
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -513,6 +529,7 @@ fun LoginRegistroScreen(
                                 Icon(Icons.Default.Class, contentDescription = null, tint = AzulBarraSuperior)
                             },
                             singleLine = true,
+                            colors = coloresCampo,
                             shape = RoundedCornerShape(14.dp),
                             modifier = Modifier.fillMaxWidth()
                         )

@@ -17,6 +17,8 @@ import com.example.appmenu.data.repository.AuthRepository
 import com.example.appmenu.data.repository.AuthRepositoryImpl
 import com.example.appmenu.data.repository.ContenidosRepository
 import com.example.appmenu.data.repository.ContenidosRepositoryImpl
+import com.example.appmenu.data.repository.FotoPerfilRepository
+import com.example.appmenu.data.repository.FotoPerfilRepositoryImpl
 import com.example.appmenu.data.repository.NotasRepository
 import com.example.appmenu.data.repository.NotasRepositoryImpl
 import com.example.appmenu.data.repository.PreferenciasRepository
@@ -80,7 +82,9 @@ class AppContainer(context: Context) {
 
     val preferenciasRepository: PreferenciasRepository = PreferenciasRepositoryImpl(estadoDataStore)
 
-    val triviaRepository: TriviaRepository = TriviaRepositoryImpl(WikipediaRemoteDataSource(external.wikipediaApi))
+    val fotoPerfilRepository: FotoPerfilRepository = FotoPerfilRepositoryImpl(context.applicationContext)
+
+    val triviaRepository: TriviaRepository =TriviaRepositoryImpl(WikipediaRemoteDataSource(external.wikipediaApi))
 
     init {
         // mantiene el token en memoria al dia con lo guardado en DataStore (al abrir la app)

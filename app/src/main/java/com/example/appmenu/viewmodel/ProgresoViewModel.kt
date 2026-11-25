@@ -6,6 +6,7 @@ import com.example.appmenu.data.repository.AuthRepository
 import com.example.appmenu.data.repository.ContenidosRepository
 import com.example.appmenu.data.repository.ProgresoRepository
 import com.example.appmenu.domain.model.EjercicioEducativo
+import com.example.appmenu.domain.model.UsuarioSesion
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -21,6 +22,10 @@ class ProgresoViewModel(
     private val progresoRepository: ProgresoRepository,
     private val authRepository: AuthRepository
 ) : ViewModel() {
+
+    /** Usuario logueado, para mostrar su nombre y curso en la cabecera. */
+    val sesion: StateFlow<UsuarioSesion> = authRepository.sesion
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), UsuarioSesion())
 
     val ejercicios: StateFlow<List<EjercicioEducativo>> = contenidosRepository.ejercicios
 

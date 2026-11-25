@@ -62,7 +62,9 @@ fun PerfilScreen(
     val galeriaLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uriSeleccionado ->
-        perfilViewModel.actualizarImagenDesdeGaleria(uriSeleccionado)
+        perfilViewModel.actualizarImagenDesdeGaleria(uriSeleccionado) { guardada ->
+            if (!guardada) Toast.makeText(context, "No se pudo guardar la imagen.", Toast.LENGTH_LONG).show()
+        }
     }
 
     // launcher para camara
@@ -70,8 +72,10 @@ fun PerfilScreen(
         contract = ActivityResultContracts.TakePicture()
     ) { exito ->
         if (exito) {
-            perfilViewModel.actualizarImagenDesdeCamara(true)
-            Toast.makeText(context, "¡Fotografía de credencial guardada!", Toast.LENGTH_SHORT).show()
+            perfilViewModel.actualizarImagenDesdeCamara(true) { guardada ->
+                val mensaje = if (guardada) "¡Fotografía de credencial guardada!" else "No se pudo guardar la fotografía."
+                Toast.makeText(context, mensaje, Toast.LENGTH_SHORT).show()
+            }
         } else {
             Toast.makeText(context, "Captura cancelada.", Toast.LENGTH_SHORT).show()
         }
@@ -139,9 +143,7 @@ fun PerfilScreen(
                 // foto con bordes redondeados y soporte de camara nativa
                 ImagenInteligente(imagenUri = imagenUri)
 
-                val nombreMostrar = if (sesion.estaAutenticado && sesion.nombreCompleto.isNotBlank()) {
-                    sesion.nombreCompleto
-                } else if (esDocente) "Prof. Andrea Valenzuela" else "Martina González"
+                val nombreMostrar = sesion.nombreParaMostrar(esDocente)
 
                 Text(
                     text = nombreMostrar,
@@ -151,7 +153,9 @@ fun PerfilScreen(
                 )
 
                 Text(
-                    text = if (sesion.estaAutenticado && sesion.email.isNotBlank()) sesion.email else if (esDocente) "Docente titular 2.° Básico" else "2.° Básico A · Escuela Marcela Paz",
+                    text = if (sesion.estaAutenticado && sesion.email.isNotBlank()) sesion.email
+                        else if (esDocente) "Docente titular ${sesion.cursoParaMostrar()}"
+                        else "${sesion.cursoParaMostrar()} · Escuela Marcela Paz",
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Medium,
                     color = AzulBarraSuperior
@@ -203,16 +207,15 @@ fun PerfilScreen(
                     color = TextoOscuro
                 )
 
+                // datos de la cuenta logueada; en el acceso rapido se muestran los de demostracion
                 if (esDocente) {
                     FilaDatoPerfil("Cargo", "Docente General Básica", Icons.Default.School)
-                    FilaDatoPerfil("Curso Asignado", "2.° Básico", Icons.Default.School)
-                    FilaDatoPerfil("Usuario", "prof.andrea", Icons.Default.Person)
-                    FilaDatoPerfil("Contraseña", "••••••••", Icons.Default.Lock)
+                    FilaDatoPerfil("Curso Asignado", sesion.cursoParaMostrar(), Icons.Default.School)
                 } else {
-                    FilaDatoPerfil("Curso", "2.° Básico", Icons.Default.School)
-                    FilaDatoPerfil("Usuario", "martina", Icons.Default.Person)
-                    FilaDatoPerfil("Contraseña", "••••••••", Icons.Default.Lock)
+                    FilaDatoPerfil("Curso", sesion.cursoParaMostrar(), Icons.Default.School)
                 }
+                FilaDatoPerfil("Usuario", sesion.usuarioParaMostrar(esDocente), Icons.Default.Person)
+                FilaDatoPerfil("Contraseña", "••••••••", Icons.Default.Lock)
             }
         }
 

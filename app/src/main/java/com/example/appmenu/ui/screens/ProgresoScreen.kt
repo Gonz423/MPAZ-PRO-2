@@ -46,6 +46,7 @@ fun ProgresoScreen(
     // el ViewModel combina el avance local con los resultados guardados en ms-progreso
     val todosLosEjercicios by viewModel.ejercicios.collectAsStateWithLifecycle()
     val porcentajes by viewModel.porcentajes.collectAsStateWithLifecycle()
+    val sesion by viewModel.sesion.collectAsStateWithLifecycle()
 
     val pctLenguaje = porcentajes["lenguaje"] ?: 0
     val pctMatematica = porcentajes["matematica"] ?: 0
@@ -89,13 +90,13 @@ fun ProgresoScreen(
 
                 Column {
                     Text(
-                        text = "Martina González",
+                        text = sesion.nombreParaMostrar(esDocente = false),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = TextoOscuro
                     )
                     Text(
-                        text = "2.° Básico · Escuela Marcela Paz",
+                        text = "${sesion.cursoParaMostrar()} · Escuela Marcela Paz",
                         fontSize = 13.sp,
                         color = GrisTexto
                     )

@@ -25,6 +25,18 @@ data class UsuarioSesion(
     val idEstudiante: Long
         get() = if (estaAutenticado && id > 0) id else ID_ESTUDIANTE_DEMO
 
+    /** Datos para mostrar en pantalla: los del usuario logueado o, en el acceso rapido, el perfil de demostracion. */
+    fun nombreParaMostrar(esDocente: Boolean): String =
+        if (estaAutenticado && nombreCompleto.isNotBlank()) nombreCompleto
+        else if (esDocente) "Prof. Andrea Valenzuela" else "Martina González"
+
+    fun usuarioParaMostrar(esDocente: Boolean): String =
+        if (estaAutenticado && username.isNotBlank()) username
+        else if (esDocente) "prof.andrea" else "martina"
+
+    fun cursoParaMostrar(): String =
+        if (estaAutenticado && curso.isNotBlank()) curso else "2° Básico A"
+
     companion object {
         const val TOKEN_SIN_CONEXION = "local-offline-token"
         const val ID_ESTUDIANTE_DEMO = 1L

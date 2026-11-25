@@ -34,7 +34,7 @@ object AppViewModelProvider {
             NotasViewModel(c.notasRepository, c.progresoRepository, c.authRepository)
         }
         initializer { EstadoViewModel(contenedor().preferenciasRepository) }
-        initializer { PerfilViewModel(contenedor().authRepository) }
+        initializer { PerfilViewModel(contenedor().authRepository, contenedor().fotoPerfilRepository) }
         initializer { TriviaViewModel(contenedor().triviaRepository) }
         initializer {
             val c = contenedor()
